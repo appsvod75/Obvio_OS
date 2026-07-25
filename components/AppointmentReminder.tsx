@@ -61,6 +61,18 @@ export const AppointmentReminder = () => {
     return () => clearInterval(interval);
   }, [checkAppointments]);
 
+  useEffect(() => {
+    if (!alertAppt) return;
+    try {
+      const msg = new SpeechSynthesisUtterance(
+        `Cliente ${alertAppt.clientName}, servicio ${alertAppt.serviceType}, a las ${alertAppt.time}`
+      );
+      msg.lang = 'es-ES';
+      msg.rate = 1.1;
+      speechSynthesis.speak(msg);
+    } catch (e) { /* voz no disponible */ }
+  }, [alertAppt]);
+
   const handleSnooze = () => {
     if (!alertAppt) return;
     setSnoozedUntil(prev => ({ ...prev, [alertAppt.id]: Date.now() + 5 * 60 * 1000 }));
