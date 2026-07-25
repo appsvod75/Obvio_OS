@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, PropsWithChildren } from 'react';
 import { User, Client, CatalogItem, Ticket, Sale, AppConfig, Role, TicketType, InventoryMovement, InventoryMovementType, Branch, BranchStock, CashSession, VideoItem, VideoLog, Appointment, Promotion, MonthlyPlan, CashClosure } from '../types';
 import { ToastContainer, ToastMessage, ToastType } from '../components/Toast';
+import { useClients } from './ClientsContext';
+import { useCatalog } from './CatalogContext';
 
 import { nowES } from '../utils/dates';
 
@@ -80,9 +82,12 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const [branches, setBranches] = useState<Branch[]>([]);
     const [monthlyPlans, setMonthlyPlans] = useState<MonthlyPlan[]>([]);
     const [users, setUsers] = useState<User[]>([]);
-    const [clients, setClients] = useState<Client[]>([]);
-    const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
+    const { clients, setClients, addClient: addClientFromCtx, updateClient: updateClientFromCtx } = useClients();
+    const {
+        catalog, setCatalog, categories, setCategories,
+        addItem: addItemFromCtx, updateItem: updateItemFromCtx, removeItem: removeItemFromCtx,
+        addCategory: addCategoryFromCtx, updateCategory: updateCategoryFromCtx, removeCategory: removeCategoryFromCtx
+    } = useCatalog();
     const [stocks, setStocks] = useState<BranchStock[]>([]);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [sales, setSales] = useState<Sale[]>([]);
@@ -770,73 +775,30 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     };
 
     const addClient = async (client: Client) => {
-        try {
-            const res = await fetch(`${API_URL}/clients`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(client)
-            });
-            if (res.ok) {
-                setClients(prev => [...prev, client]);
-
-                // Actualización optimista del Bono de Referencia para el padrino
-                if (client.referredBy && config.loyalty?.enabled) {
-                    const bonus = config.loyalty.referralBonus || 0;
-                    if (bonus > 0) {
-                        setClients(prevClients => prevClients.map(c => {
-                            if (c.id === client.referredBy) {
-                                return {
-                                    ...c,
-                                    points: (c.points || 0) + bonus
-                                };
-                            }
-                            return c;
-                        }));
-                    }
+        const ok = await addClientFromCtx(client);
+        if (ok) {
+            // Actualización optimista del Bono de Referencia para el padrino
+            if (client.referredBy && config.loyalty?.enabled) {
+                const bonus = config.loyalty.referralBonus || 0;
+                if (bonus > 0) {
+                    setClients(prevClients => prevClients.map(c => {
+                        if (c.id === client.referredBy) {
+                            return { ...c, points: (c.points || 0) + bonus };
+                        }
+                        return c;
+                    }));
                 }
             }
-        } catch (e) { console.error(e); }
+        }
     };
 
     const updateClient = async (client: Client) => {
-        try {
-            const res = await fetch(`${API_URL}/clients/${client.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(client)
-            });
-            if (res.ok) setClients(prev => prev.map(c => c.id === client.id ? client : c));
-        } catch (e) { console.error(e); }
+        await updateClientFromCtx(client);
     };
 
-    const addItem = async (item: CatalogItem) => {
-        try {
-            const res = await fetch(`${API_URL}/catalog`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(item)
-            });
-            if (res.ok) setCatalog(prev => [...prev, item]);
-        } catch (e) { console.error(e); }
-    };
-
-    const updateItem = async (item: CatalogItem) => {
-        try {
-            const res = await fetch(`${API_URL}/catalog/${item.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(item)
-            });
-            if (res.ok) setCatalog(prev => prev.map(i => i.id === item.id ? item : i));
-        } catch (e) { console.error(e); }
-    };
-
-    const removeItem = async (id: string) => {
-        try {
-            const res = await fetch(`${API_URL}/catalog/${id}`, { method: 'DELETE' });
-            if (res.ok) setCatalog(prev => prev.filter(i => i.id !== id));
-        } catch (e) { console.error(e); }
-    };
+    const addItem = async (item: CatalogItem) => { await addItemFromCtx(item); };
+    const updateItem = async (item: CatalogItem) => { await updateItemFromCtx(item); };
+    const removeItem = async (id: string) => { await removeItemFromCtx(id); };
 
     const addAppointment = async (appt: Appointment) => {
         try {
@@ -930,47 +892,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
             }
         } catch (e) { console.error(e); }
     };
-    const addCategory = async (name: string) => {
-        if (categories.some(c => c.name === name)) return;
-        try {
-            const res = await fetch(`${API_URL}/categories`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setCategories(prev => [...prev, { id: data.id, name }]);
-            }
-        } catch (e) { console.error(e); }
-    };
-    const updateCategory = async (oldName: string, newName: string): Promise<boolean> => {
-        if (!oldName || !newName || oldName === newName) return false;
-        if (categories.some(c => c.name === newName)) return false;
-        try {
-            const res = await fetch(`${API_URL}/categories/${encodeURIComponent(oldName)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newName })
-            });
-            if (res.ok) {
-                setCategories(prev => prev.map(c => c.name === oldName ? { ...c, name: newName } : c));
-                setCatalog(prev => prev.map(item => item.category === oldName ? { ...item, category: newName } : item));
-                return true;
-            }
-        } catch (e) { console.error(e); }
-        return false;
-    };
-    const removeCategory = async (name: string) => {
-        try {
-            const res = await fetch(`${API_URL}/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
-            if (res.ok) {
-                const general = categories.find(c => c.name === 'General') || { id: 'general', name: 'General' };
-                setCategories(prev => prev.filter(c => c.name !== name));
-                setCatalog(prev => prev.map(item => item.category === name ? { ...item, category: general.name, categoryId: general.id } : item));
-            }
-        } catch (e) { console.error(e); }
-    };
+    const addCategory = async (name: string) => { await addCategoryFromCtx(name); };
+    const updateCategory = async (oldName: string, newName: string): Promise<boolean> => { return await updateCategoryFromCtx(oldName, newName); };
+    const removeCategory = async (name: string) => { await removeCategoryFromCtx(name); };
     const getBranchStock = (branchId: string, itemId: string) => stocks.find(s => s.branchId === branchId && s.itemId === itemId);
     const registerInventoryMovement = async (branchId: string, itemId: string, type: InventoryMovementType, quantity: number, unitCost: number = 0, reason: string = '', status: 'pending' | 'completed' = 'completed') => {
         try {
