@@ -152,7 +152,6 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
         });
         if (success) {
             if (logoUrl) updateFavicon(logoUrl);
-            showNotify('success', 'Configuraciones guardadas localmente y en el VPS');
         }
     };
 
