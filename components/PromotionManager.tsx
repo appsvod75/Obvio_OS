@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
-import { useBarber } from '../context/BarberContext';
+import { usePromotions } from '../context/PromotionsContext';
+import { useConfigCtx } from '../context/ConfigContext';
+import { useCatalog } from '../context/CatalogContext';
 import {
     Zap, Plus, Trash2, Calendar, Clock, Star, Gift,
     Percent, DollarSign, X, CheckCircle2, Info,
@@ -11,7 +13,9 @@ import { Promotion, PromotionTrigger, PromotionType } from '../types';
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const PromotionManager = () => {
-    const { promotions, addPromotion, removePromotion, updatePromotion, config, updateConfig, catalog } = useBarber();
+    const { promotions, addPromotion, removePromotion, updatePromotion } = usePromotions();
+    const { config, updateConfig } = useConfigCtx();
+    const { catalog } = useCatalog();
     const scroll = useDragScroll();
     const modalScroll = useDragScroll();
     const [activeTab, setActiveTab] = useState<'promos' | 'loyalty'>('promos');

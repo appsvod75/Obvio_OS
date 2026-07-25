@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { useBarber } from '../context/BarberContext';
+import { useClients } from '../context/ClientsContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import {
     Search, Plus, FileSpreadsheet, Edit, X, UserPlus,
     Mail, Calendar, FileText, Info, AlertCircle, CheckCircle, Download, FileCheck, Star, Trophy, Gift
@@ -9,7 +10,8 @@ import { Client } from '../types';
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const ClientManager = () => {
-    const { clients, addClient, updateClient, config } = useBarber();
+    const { clients, addClient, updateClient } = useClients();
+    const { config } = useConfigCtx();
     const scroll = useDragScroll();
     const [search, setSearch] = useState('');
 
