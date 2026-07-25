@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useBranch } from '../context/BranchContext';
+import { useBarber } from '../context/BarberContext';
 import {
     Store, Plus, Edit, MapPin, Phone, Link2,
     CheckCircle2, Zap, Save, RefreshCw,
@@ -13,6 +14,7 @@ import { useDragScroll } from '../hooks/useDragScroll';
 
 export const BranchManager = () => {
     const { branches, addBranch, updateBranch, monthlyPlans, upsertMonthlyPlan } = useBranch();
+    const { showToast } = useBarber();
     const branchScroll = useDragScroll();
 
     const [activeTab, setActiveTab] = useState<'config' | 'plan'>('config');
@@ -39,11 +41,8 @@ export const BranchManager = () => {
     const [planDays, setPlanDays] = useState('');
     const [planProdPct, setPlanProdPct] = useState('10');
 
-    const [notify, setNotify] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
-
     const showNotify = (type: 'success' | 'error', msg: string) => {
-        setNotify({ type, msg });
-        setTimeout(() => setNotify(null), 3000);
+        showToast(type, type === 'success' ? 'Operación Exitosa' : 'Error', msg);
     };
 
     const handleEditBranch = (branch: Branch) => {
@@ -148,13 +147,6 @@ export const BranchManager = () => {
 
     return (
         <div className="h-full flex flex-col md:flex-row bg-rose-bg animate-in fade-in duration-500 overflow-hidden font-inter">
-
-            {notify && (
-                <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-[clamp(12px,3vmin,24px)] py-[clamp(8px,2vmin,12px)] rounded-2xl shadow-2xl flex items-center gap-[clamp(6px,1.5vmin,12px)] font-bold border ${notify.type === 'success' ? 'bg-emerald-600/90 text-white border-emerald-400' : 'bg-destructive text-white border-destructive'}`}>
-                    {notify.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-                    <span className="text-[clamp(9px,1.8vmin,12px)]">{notify.msg}</span>
-                </div>
-            )}
 
             <div className="w-full md:w-[clamp(300px,40vmin,420px)] border-r border-rose-border bg-rose-muted/10 overflow-hidden flex flex-col shrink-0 h-full">
 

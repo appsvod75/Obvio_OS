@@ -57,7 +57,7 @@ export const Reception = ({ navigateView }: ReceptionProps) => {
   const { branches } = useBranch();
   const { config } = useConfigCtx();
   const { catalog, categories } = useCatalog();
-  const { currentUser, logout } = useBarber();
+  const { currentUser, logout, showToast } = useBarber();
   const clientSearchScroll = useDragScroll();
   const queueScroll = useDragScroll();
   const [view, setView] = useState<'ticket' | 'newClient'>('ticket');
@@ -74,7 +74,6 @@ export const Reception = ({ navigateView }: ReceptionProps) => {
   const [clientSearch, setClientSearch] = useState('');
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [generatedTicket, setGeneratedTicket] = useState<Ticket | null>(null);
-  const [notification, setNotification] = useState<{ type: 'error' | 'success', msg: string } | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
 
   const currentBranchId = currentUser?.branchId || branches[0]?.id;
@@ -93,8 +92,7 @@ export const Reception = ({ navigateView }: ReceptionProps) => {
   }
 
   const showNotify = (type: 'error' | 'success', msg: string) => {
-    setNotification({ type, msg });
-    setTimeout(() => setNotification(null), 3000);
+    showToast(type, type === 'success' ? 'Éxito' : 'Error', msg);
   };
 
   const handleCreateTicket = async (type: TicketType) => {
@@ -139,7 +137,6 @@ export const Reception = ({ navigateView }: ReceptionProps) => {
 
   return (
     <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-7xl mx-auto h-full flex flex-col relative bg-rose-bg overflow-hidden">
-      {notification && <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 font-bold border-2 text-[9px] sm:text-xs ${notification.type === 'error' ? 'bg-destructive/90 text-white border-destructive' : 'bg-emerald-500/90 text-white border-emerald-400'}`}>{notification.type === 'error' ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{notification.msg}</div>}
 
       {currentUser?.role !== 'admin' && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-3 lg:mb-4 bg-white p-3 sm:p-4 rounded-xl border border-rose-border gap-2 sm:gap-0 shrink-0">

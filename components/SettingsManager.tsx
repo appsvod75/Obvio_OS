@@ -39,7 +39,7 @@ const allPanels = [
 export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey }) => {
     const { config, updateConfig } = useConfigCtx();
     const { branches, updateBranch } = useBranch();
-    const { factoryReset, currentUser } = useBarber();
+    const { factoryReset, currentUser, showToast } = useBarber();
 
     const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
@@ -62,7 +62,6 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
     const [hiddenPanels, setHiddenPanels] = useState<string[]>(config.hiddenPanels || []);
 
     // UI State
-    const [notify, setNotify] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
     const [newItemName, setNewItemName] = useState('');
     const [newItemUrl, setNewItemUrl] = useState('');
     const [previewVideo, setPreviewVideo] = useState<any>(null);
@@ -102,8 +101,7 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
     }, [videoPlaylist]);
 
     const showNotify = (type: 'success' | 'error', msg: string) => {
-        setNotify({ type, msg });
-        setTimeout(() => setNotify(null), 3000);
+        showToast(type, type === 'success' ? 'Operación Exitosa' : 'Error', msg);
     };
 
     const updateFavicon = (url: string) => {
@@ -267,12 +265,6 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
 
     return (
         <div className="h-full flex flex-col bg-rose-bg font-inter animate-in fade-in duration-300 overflow-hidden">
-            {notify && (
-                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-4 sm:px-6 py-2 rounded-full shadow-2xl flex items-center gap-2 font-black bg-emerald-600 text-white border border-emerald-400 animate-in slide-in-from-top-2 uppercase text-[9px] sm:text-[10px] tracking-widest">
-                    <CheckCircle2 size={14} className="shrink-0" />
-                    <span className="truncate">{notify.msg}</span>
-                </div>
-            )}
 
             <div className="px-3 sm:px-6 lg:px-8 py-2 sm:py-3 border-b border-rose-border flex flex-col sm:flex-row gap-3 sm:items-center justify-between bg-rose-bg/50 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-3 sm:gap-4">

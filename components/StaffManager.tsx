@@ -21,7 +21,7 @@ export const StaffManager = () => {
     const { sales } = useSales();
     const { tickets } = useTickets();
     const { appointments } = useAgenda();
-    const { currentUser } = useBarber();
+    const { currentUser, showToast } = useBarber();
     const formScroll = useDragScroll();
 
     const isSuperAdmin = currentUser?.role === 'admin' && !currentUser.branchId;
@@ -37,11 +37,8 @@ export const StaffManager = () => {
     const [canDoPos, setCanDoPos] = useState(false);
     const [telegramId, setTelegramId] = useState('');
     const [listSearch, setListSearch] = useState('');
-    const [notify, setNotify] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
-
     const showNotify = (type: 'success' | 'error', msg: string) => {
-        setNotify({ type, msg });
-        setTimeout(() => setNotify(null), 3000);
+        showToast(type, type === 'success' ? 'Operación Exitosa' : 'Error', msg);
     };
 
     const resetForm = () => {
@@ -91,11 +88,6 @@ export const StaffManager = () => {
 
     return (
         <div className="h-full flex flex-col lg:flex-row bg-rose-bg animate-in fade-in overflow-hidden font-inter">
-            {notify && (
-                <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] px-[clamp(12px,3vmin,24px)] py-[clamp(6px,1.5vmin,12px)] rounded-xl shadow-2xl flex items-center gap-2 font-bold border text-[clamp(9px,2vmin,11px)] ${notify.type === 'success' ? 'bg-emerald-600/90 text-white border-emerald-400' : 'bg-destructive text-white border-destructive'}`}>
-                    {notify.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}{notify.msg}
-                </div>
-            )}
 
             {/* Left: Form */}
             <div ref={formScroll.ref} {...formScroll.props} className="w-full lg:w-[320px] xl:w-[360px] border-r border-rose-border bg-rose-muted/15 overflow-y-auto hide-scrollbar flex flex-col p-[clamp(12px,3vmin,24px)] shrink-0">
