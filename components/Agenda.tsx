@@ -13,12 +13,6 @@ import { formatDateES } from '../utils/dates';
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-const services = [
-    { label: 'Corte', code: 'C' }, { label: 'Barba', code: 'B' },
-    { label: 'Corte+Barba', code: 'D' }, { label: 'Tinte/Color', code: 'T' },
-    { label: 'Otro', code: 'X' },
-];
-
 export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void }) => {
     const { appointments, addAppointment, updateAppointment, deleteAppointment } = useAgenda();
     const { users } = useStaff();
@@ -41,7 +35,8 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
     const [formDate, setFormDate] = useState(''); const [formTime, setFormTime] = useState('10:00');
     const [formClient, setFormClient] = useState(''); const [formClientId, setFormClientId] = useState<string | undefined>(undefined);
     const [formPhone, setFormPhone] = useState(''); const [formBarber, setFormBarber] = useState('');
-    const [formService, setFormService] = useState('Corte'); const [formNotes, setFormNotes] = useState('');
+    const [formService, setFormService] = useState('');
+    const [formNotes, setFormNotes] = useState('');
     const [clientSuggestions, setClientSuggestions] = useState<typeof clients>([]);
 
     const currentBranchId = currentUser?.branchId || branches[0]?.id;
@@ -89,8 +84,9 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
     };
 
     const openCreate = () => {
+        const firstCat = categories.filter(c => c.name !== 'General')[0];
         setEditingId(null); setFormDate(selectedDate); setFormTime('10:00');
-        setFormClient(''); setFormClientId(undefined); setFormPhone(''); setFormBarber(''); setFormService('Corte'); setFormNotes('');
+        setFormClient(''); setFormClientId(undefined); setFormPhone(''); setFormBarber(''); setFormService(firstCat?.name || 'Servicio'); setFormNotes('');
         setClientSuggestions([]); setShowModal(true);
     };
 
@@ -101,9 +97,10 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
     };
 
     const handleCheckIn = useCallback(async (appt: Appointment) => {
-        let type: TicketType = 'C'; const s = appt.serviceType.toLowerCase();
+        let type: TicketType = 'X'; const s = appt.serviceType.toLowerCase();
         if (s.includes('barba') && s.includes('corte')) type = 'D';
-        else if (s.includes('barba')) type = 'B';
+        else if (s.includes('barba') || s.includes('cerda')) type = 'B';
+        else if (s.includes('corte') || s.includes('cabello') || s.includes('cejas')) type = 'C';
         const existingClient = clients.find(c => c.name.toLowerCase() === appt.clientName.toLowerCase());
         const ticket = await createTicket(type, appt.clientName, existingClient?.id);
         if (ticket) { updateAppointment({ ...appt, status: 'completed' }); showToast('success', 'Atendido', `Ticket ${ticket.fullCode} para ${appt.clientName}`); }
@@ -220,6 +217,11 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                                     </div>
                                 )}
                             </div>
+                            <div>
+                                <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Teléfono</label>
+                                <input value={formPhone} onChange={e => setFormPhone(e.target.value)}
+                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Opcional" />
+                            </div>
                             <div className="grid grid-cols-2 gap-[clamp(8px,2vmin,16px)]">
                                 <div>
                                     <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Fecha</label>
@@ -235,9 +237,9 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Servicio</label>
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                    {[...services, ...(categories || []).filter(c => c.name !== 'General').map(c => ({ label: c.name, code: c.name }))].map(s => (
-                                        <button key={s.label} type="button" onClick={() => setFormService(s.label)}
-                                            className={`px-[clamp(8px,2vmin,14px)] py-[clamp(4px,1vmin,8px)] rounded-lg text-[clamp(10px,2.5vmin,12px)] font-bold border transition-all ${formService === s.label ? 'bg-rose-palo text-white border-rose-palo' : 'bg-rose-bg text-rose-700 border-rose-border hover:border-rose-palo'}`}>{s.label}</button>
+                                    {categories.filter(c => c.name !== 'General').map(c => (
+                                        <button key={c.id || c.name} type="button" onClick={() => setFormService(c.name)}
+                                            className={`px-[clamp(8px,2vmin,14px)] py-[clamp(4px,1vmin,8px)] rounded-lg text-[clamp(10px,2.5vmin,12px)] font-bold border transition-all ${formService === c.name ? 'bg-rose-palo text-white border-rose-palo' : 'bg-rose-bg text-rose-700 border-rose-border hover:border-rose-palo'}`}>{c.name}</button>
                                     ))}
                                 </div>
                             </div>
@@ -248,11 +250,6 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                                     <option value="">Cualquiera</option>
                                     {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                 </select>
-                            </div>
-                            <div>
-                                <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Teléfono</label>
-                                <input value={formPhone} onChange={e => setFormPhone(e.target.value)}
-                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Opcional" />
                             </div>
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Notas</label>
