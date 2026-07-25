@@ -211,6 +211,7 @@ app.post('/api/sales', (req, res) => {
     });
 
     tx();
+    io.emit('sync_needed', { reason: 'sales' });
     res.json({ success: true });
   } catch (e) {
     console.error("Critical Sale Error:", e);
@@ -286,6 +287,7 @@ app.post('/api/inventory-movements', (req, res) => {
     });
 
     tx();
+    io.emit('sync_needed', { reason: 'inventory' });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -313,6 +315,7 @@ app.post('/api/clients', (req, res) => {
     });
 
     tx();
+    io.emit('sync_needed', { reason: 'clients' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -322,6 +325,7 @@ app.put('/api/clients/:id', (req, res) => {
   const c = req.body;
   try {
     db().prepare("UPDATE clients SET name=?, phone=?, email=?, birth_date=?, notes=? WHERE id=?").run(c.name, c.phone, c.email, c.birthDate, c.notes, id);
+    io.emit('sync_needed', { reason: 'clients' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -334,6 +338,7 @@ app.post('/api/users', (req, res) => {
   const u = req.body;
   try {
     db().prepare("INSERT INTO users (id, name, username, role, pin, branch_id, can_do_pos, active) VALUES (?,?,?,?,?,?,?,?)").run(u.id, u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, 1);
+    io.emit('sync_needed', { reason: 'users' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -343,6 +348,7 @@ app.put('/api/users/:id', (req, res) => {
   const u = req.body;
   try {
     db().prepare("UPDATE users SET name=?, username=?, role=?, pin=?, branch_id=?, can_do_pos=?, active=? WHERE id=?").run(u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, u.active ? 1 : 0, id);
+    io.emit('sync_needed', { reason: 'users' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -351,6 +357,7 @@ app.delete('/api/users/:id', (req, res) => {
   const { id } = req.params;
   try {
     db().prepare("DELETE FROM users WHERE id = ?").run(id);
+    io.emit('sync_needed', { reason: 'users' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -373,6 +380,7 @@ app.post('/api/catalog', (req, res) => {
       }
     }
     db().prepare("INSERT INTO catalog (id, name, type, price, category_id, active, combo_definition) VALUES (?,?,?,?,?,?,?)").run(i.id, i.name, i.type, i.price, catId, 1, JSON.stringify(i.comboDefinition));
+    io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -392,6 +400,7 @@ app.put('/api/catalog/:id', (req, res) => {
       }
     }
     db().prepare("UPDATE catalog SET name=?, type=?, price=?, category_id=?, active=?, combo_definition=? WHERE id=?").run(i.name, i.type, i.price, catId, i.active ? 1 : 0, JSON.stringify(i.comboDefinition), id);
+    io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -400,6 +409,7 @@ app.delete('/api/catalog/:id', (req, res) => {
   const { id } = req.params;
   try {
     db().prepare("DELETE FROM catalog WHERE id = ?").run(id);
+    io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -416,6 +426,7 @@ app.post('/api/categories', (req, res) => {
     if (existing) return res.json({ success: true, id: existing.id });
     const newId = crypto.randomUUID();
     db().prepare("INSERT INTO categories (id, name) VALUES (?, ?)").run(newId, name);
+    io.emit('sync_needed', { reason: 'categories' });
     res.json({ success: true, id: newId });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -428,6 +439,7 @@ app.put('/api/categories/:name', (req, res) => {
     const existing = db().prepare("SELECT id FROM categories WHERE name = ?").get(newName);
     if (existing && oldName !== newName) return res.status(409).json({ error: 'Category already exists' });
     db().prepare("UPDATE categories SET name = ? WHERE name = ?").run(newName, oldName);
+    io.emit('sync_needed', { reason: 'categories' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -436,6 +448,7 @@ app.delete('/api/categories/:name', (req, res) => {
   const { name } = req.params;
   try {
     db().prepare("DELETE FROM categories WHERE name = ?").run(name);
+    io.emit('sync_needed', { reason: 'categories' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -448,6 +461,7 @@ app.post('/api/branches', (req, res) => {
   const b = req.body;
   try {
     db().prepare("INSERT INTO branches (id, name, address, phone, email, webhook_url, report_email, active, has_reception, default_monthly_goal, default_working_days, default_product_goal_percent, auto_close_time, auto_close_enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(b.id, b.name, b.address, b.phone, b.email, b.webhookUrl, b.reportEmail, b.active ? 1 : 0, b.hasReception ? 1 : 0, b.defaultMonthlyGoal, b.defaultWorkingDays, b.defaultProductGoalPercent, b.autoCloseTime || '22:00:00', b.autoCloseEnabled ? 1 : 0);
+    io.emit('sync_needed', { reason: 'branches' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -457,6 +471,7 @@ app.put('/api/branches/:id', (req, res) => {
   const b = req.body;
   try {
     db().prepare("UPDATE branches SET name=?, address=?, phone=?, email=?, webhook_url=?, report_email=?, active=?, has_reception=?, default_monthly_goal=?, default_working_days=?, default_product_goal_percent=?, auto_close_time=?, auto_close_enabled=? WHERE id=?").run(b.name, b.address, b.phone, b.email, b.webhookUrl, b.reportEmail, b.active ? 1 : 0, b.hasReception ? 1 : 0, b.defaultMonthlyGoal, b.defaultWorkingDays, b.defaultProductGoalPercent, b.autoCloseTime || '22:00:00', b.autoCloseEnabled ? 1 : 0, id);
+    io.emit('sync_needed', { reason: 'branches' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -471,6 +486,7 @@ app.post('/api/monthly-plans', (req, res) => {
     db().prepare(
       "INSERT INTO monthly_plans (id, branch_id, month, year, goal, working_days, product_goal_percent) VALUES (?,?,?,?,?,?,?) ON CONFLICT(branch_id, month, year) DO UPDATE SET goal=excluded.goal, working_days=excluded.working_days, product_goal_percent=excluded.product_goal_percent"
     ).run(p.id, p.branchId, p.month, p.year, p.goal, p.workingDays, p.productGoalPercent);
+    io.emit('sync_needed', { reason: 'monthly_plans' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -483,6 +499,7 @@ app.post('/api/promotions', (req, res) => {
   const p = req.body;
   try {
     db().prepare("INSERT INTO promotions (id, name, type, value, trigger_type, days_active, hour_start, hour_end, start_date, end_date, apply_to, specific_item_id, active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").run(p.id, p.name, p.type, p.value, p.trigger, JSON.stringify(p.daysActive), p.hourStart, p.hourEnd, p.startDate, p.endDate, p.applyTo, p.specificItemId, 1);
+    io.emit('sync_needed', { reason: 'promotions' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -492,6 +509,7 @@ app.put('/api/promotions/:id', (req, res) => {
   const p = req.body;
   try {
     db().prepare("UPDATE promotions SET name=?, type=?, value=?, trigger_type=?, days_active=?, hour_start=?, hour_end=?, start_date=?, end_date=?, apply_to=?, specific_item_id=?, active=? WHERE id=?").run(p.name, p.type, p.value, p.trigger, JSON.stringify(p.daysActive), p.hourStart, p.hourEnd, p.startDate, p.endDate, p.applyTo, p.specificItemId, p.active ? 1 : 0, id);
+    io.emit('sync_needed', { reason: 'promotions' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -500,6 +518,7 @@ app.delete('/api/promotions/:id', (req, res) => {
   const { id } = req.params;
   try {
     db().prepare("DELETE FROM promotions WHERE id = ?").run(id);
+    io.emit('sync_needed', { reason: 'promotions' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -512,6 +531,7 @@ app.post('/api/appointments', (req, res) => {
   const a = req.body;
   try {
     db().prepare("INSERT INTO appointments (id, branch_id, client_id, client_name, client_phone, date, time, barber_id, service_type, notes) VALUES (?,?,?,?,?,?,?,?,?,?)").run(a.id, a.branchId, a.clientId || null, a.clientName, a.clientPhone, a.date, a.time, a.barberId, a.serviceType, a.notes);
+    io.emit('sync_needed', { reason: 'appointments' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -521,6 +541,7 @@ app.put('/api/appointments/:id', (req, res) => {
   const a = req.body;
   try {
     db().prepare("UPDATE appointments SET client_id=?, client_name=?, client_phone=?, date=?, time=?, barber_id=?, service_type=?, notes=? WHERE id=?").run(a.clientId || null, a.clientName, a.clientPhone, a.date, a.time, a.barberId, a.serviceType, a.notes, id);
+    io.emit('sync_needed', { reason: 'appointments' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -529,6 +550,7 @@ app.delete('/api/appointments/:id', (req, res) => {
   const { id } = req.params;
   try {
     db().prepare("DELETE FROM appointments WHERE id = ?").run(id);
+    io.emit('sync_needed', { reason: 'appointments' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -614,6 +636,7 @@ app.post('/api/cash-session', (req, res) => {
   const s = req.body;
   try {
     db().prepare("INSERT INTO cash_sessions (id, branch_id, opening_amount, opened_by) VALUES (?,?,?,?)").run(s.id, s.branchId, s.openingAmount, s.openedBy);
+    io.emit('sync_needed', { reason: 'cash_session' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -629,6 +652,7 @@ app.put('/api/cash-session/:id/close', (req, res) => {
         services_total = ?, products_total = ?, combos_total = ?, operations_count = ?
       WHERE id = ?
     `).run(s.totalSales || 0, s.totalCash || 0, s.totalCard || 0, s.totalTransfer || 0, s.totalBitcoin || 0, s.servicesTotal || 0, s.productsTotal || 0, s.combosTotal || 0, s.operationsCount || 0, id);
+    io.emit('sync_needed', { reason: 'cash_session' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -670,6 +694,7 @@ app.post('/api/admin/reset', (req, res) => {
     });
 
     tx();
+    io.emit('sync_needed', { reason: 'admin_reset' });
     res.json({ success: true, message: "Reset ejecutado con éxito" });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

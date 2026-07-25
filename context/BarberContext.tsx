@@ -411,10 +411,22 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
     // 0.7. SOCKET.IO REAL-TIME SYNC - Listeners globales (siempre activos)
     useEffect(() => {
-        socket.on('sync_needed', () => {
-            console.log("🔄 [SOCKET] Sincronización requerida por el servidor...");
-            syncData();
-            showToast('info', 'Actualización de Datos', 'El sistema se ha sincronizado con el servidor.');
+        let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+        const debouncedSync = (reason?: string) => {
+            if (syncTimeout) clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                console.log("🔄 [SOCKET] Sincronización requerida por el servidor...", reason || '');
+                syncData();
+                if (reason && reason !== 'tickets' && reason !== 'attendance') {
+                    showToast('info', 'Actualización de Datos', 'Los datos se han actualizado en tiempo real.');
+                }
+                syncTimeout = null;
+            }, 500);
+        };
+
+        socket.on('sync_needed', (data?: { reason?: string }) => {
+            debouncedSync(data?.reason);
         });
         socket.on('force_logout', () => {
             console.log("🔒 [SOCKET] Deslogueo forzado por actualización diaria...");
@@ -431,9 +443,15 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
             setConfig(normalized);
             showToast('info', 'Ajustes Actualizados', 'Los cambios en la configuración se han aplicado en tiempo real.');
         });
+        socket.on('attendance_update', (data: { userId: string; type: string; timestamp: string }) => {
+            console.log("📋 [SOCKET] Marcación recibida:", data);
+            debouncedSync('attendance');
+        });
         return () => {
             socket.off('sync_needed'); socket.off('force_logout');
             socket.off('config_init'); socket.off('config_update');
+            socket.off('attendance_update');
+            if (syncTimeout) clearTimeout(syncTimeout);
         };
     }, [syncData]);
 
