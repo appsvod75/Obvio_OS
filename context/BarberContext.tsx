@@ -766,7 +766,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const showToast = (type: ToastType, title: string, message: string) => {
         const id = crypto.randomUUID();
         setToasts(prev => [...prev, { id, type, title, message }]);
-        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 8000);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
     };
     const removeToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
 
