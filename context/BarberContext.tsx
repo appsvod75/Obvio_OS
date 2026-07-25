@@ -7,6 +7,7 @@ import { useCatalog } from './CatalogContext';
 import { usePromotions } from './PromotionsContext';
 import { useAgenda } from './AgendaContext';
 import { useStaff } from './StaffContext';
+import { useBranch } from './BranchContext';
 
 import { nowES } from '../utils/dates';
 
@@ -82,8 +83,7 @@ interface BarberContextType {
 const BarberContext = createContext<BarberContextType | undefined>(undefined);
 
 export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
-    const [branches, setBranches] = useState<Branch[]>([]);
-    const [monthlyPlans, setMonthlyPlans] = useState<MonthlyPlan[]>([]);
+    const { branches, setBranches, monthlyPlans, setMonthlyPlans, addBranch: addBranchFromCtx, updateBranch: updateBranchFromCtx, upsertMonthlyPlan: upsertMonthlyPlanFromCtx } = useBranch();
     const { users, setUsers, addUser: addUserFromCtx, updateUser: updateUserFromCtx, removeUser: removeUserFromCtx } = useStaff();
     const { clients, setClients, addClient: addClientFromCtx, updateClient: updateClientFromCtx } = useClients();
     const {
@@ -800,51 +800,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         }
     };
 
-    const addBranch = async (branch: Branch) => {
-        try {
-            const res = await fetch(`${API_URL}/branches`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(branch)
-            });
-            if (res.ok) {
-                setBranches(prev => [...prev, branch]);
-                return true;
-            }
-        } catch (e) { console.error(e); }
-        return false;
-    };
-
-    const updateBranch = async (branch: Branch) => {
-        try {
-            const res = await fetch(`${API_URL}/branches/${branch.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(branch)
-            });
-            if (res.ok) {
-                setBranches(prev => prev.map(b => b.id === branch.id ? branch : b));
-                return true;
-            }
-        } catch (e) { console.error(e); }
-        return false;
-    };
-
-    const upsertMonthlyPlan = async (plan: MonthlyPlan) => {
-        try {
-            const res = await fetch(`${API_URL}/monthly-plans`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(plan)
-            });
-            if (res.ok) {
-                setMonthlyPlans(prev => {
-                    const filtered = prev.filter(p => !(p.branchId === plan.branchId && p.month === plan.month && p.year === plan.year));
-                    return [...filtered, plan];
-                });
-            }
-        } catch (e) { console.error(e); }
-    };
+    const addBranch = async (branch: Branch) => { return await addBranchFromCtx(branch); };
+    const updateBranch = async (branch: Branch) => { return await updateBranchFromCtx(branch); };
+    const upsertMonthlyPlan = async (plan: MonthlyPlan) => { await upsertMonthlyPlanFromCtx(plan); };
     const addCategory = async (name: string) => { await addCategoryFromCtx(name); };
     const updateCategory = async (oldName: string, newName: string): Promise<boolean> => { return await updateCategoryFromCtx(oldName, newName); };
     const removeCategory = async (name: string) => { await removeCategoryFromCtx(name); };

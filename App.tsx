@@ -5,6 +5,7 @@ import { CatalogProvider } from './context/CatalogContext';
 import { PromotionsProvider } from './context/PromotionsContext';
 import { AgendaProvider } from './context/AgendaContext';
 import { StaffProvider } from './context/StaffContext';
+import { BranchProvider } from './context/BranchContext';
 import { AppRoutes } from './components/layout/AppRoutes';
 
 function App() {
@@ -15,9 +16,11 @@ function App() {
           <PromotionsProvider>
             <AgendaProvider>
               <StaffProvider>
-                <BarberProvider>
+                <BranchProvider>
+                  <BarberProvider>
               <AppRoutes />
             </BarberProvider>
+                </BranchProvider>
               </StaffProvider>
             </AgendaProvider>
           </PromotionsProvider>
