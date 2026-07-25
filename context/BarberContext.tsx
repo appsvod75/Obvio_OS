@@ -5,6 +5,7 @@ import { ToastContainer, ToastMessage, ToastType } from '../components/Toast';
 import { useClients } from './ClientsContext';
 import { useCatalog } from './CatalogContext';
 import { usePromotions } from './PromotionsContext';
+import { useAgenda } from './AgendaContext';
 
 import { nowES } from '../utils/dates';
 
@@ -104,7 +105,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const [videoLogs, setVideoLogs] = useState<VideoLog[]>([]);
     const [providers, setProviders] = useState<string[]>(['Proveedor Local']);
     const [movementReasons, setMovementReasons] = useState<string[]>(['Compra', 'Ajuste', 'Merma', 'Uso Interno']);
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const { appointments, setAppointments, addAppointment: addAppointmentFromCtx, updateAppointment: updateAppointmentFromCtx, deleteAppointment: deleteAppointmentFromCtx } = useAgenda();
     const { promotions, setPromotions, addPromotion: addPromotionFromCtx, updatePromotion: updatePromotionFromCtx, removePromotion: removePromotionFromCtx } = usePromotions();
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isInstallable, setIsInstallable] = useState(false);
@@ -801,34 +802,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const updateItem = async (item: CatalogItem) => { await updateItemFromCtx(item); };
     const removeItem = async (id: string) => { await removeItemFromCtx(id); };
 
-    const addAppointment = async (appt: Appointment) => {
-        try {
-            const res = await fetch(`${API_URL}/appointments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(appt)
-            });
-            if (res.ok) setAppointments(prev => [...prev, appt]);
-        } catch (e) { console.error(e); }
-    };
-
-    const updateAppointment = async (appt: Appointment) => {
-        try {
-            const res = await fetch(`${API_URL}/appointments/${appt.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(appt)
-            });
-            if (res.ok) setAppointments(prev => prev.map(a => a.id === appt.id ? appt : a));
-        } catch (e) { console.error(e); }
-    };
-
-    const deleteAppointment = async (id: string) => {
-        try {
-            const res = await fetch(`${API_URL}/appointments/${id}`, { method: 'DELETE' });
-            if (res.ok) setAppointments(prev => prev.filter(a => a.id !== id));
-        } catch (e) { console.error(e); }
-    };
+    const addAppointment = async (appt: Appointment) => { await addAppointmentFromCtx(appt); };
+    const updateAppointment = async (appt: Appointment) => { await updateAppointmentFromCtx(appt); };
+    const deleteAppointment = async (id: string) => { await deleteAppointmentFromCtx(id); };
 
     const updateConfig = async (newConfig: AppConfig): Promise<boolean> => {
         try {
