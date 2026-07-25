@@ -8,6 +8,7 @@ import { usePromotions } from './PromotionsContext';
 import { useAgenda } from './AgendaContext';
 import { useStaff } from './StaffContext';
 import { useBranch } from './BranchContext';
+import { useConfigCtx } from './ConfigContext';
 
 import { nowES } from '../utils/dates';
 
@@ -94,7 +95,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const [stocks, setStocks] = useState<BranchStock[]>([]);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [sales, setSales] = useState<Sale[]>([]);
-    const [config, setConfig] = useState<any>({});
+    const { config, setConfig, normalizeConfig, updateConfig: updateConfigFromCtx, updateLocalPlaylist: updateLocalPlaylistFromCtx } = useConfigCtx();
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         const saved = localStorage.getItem('barber_session');
         return saved ? JSON.parse(saved) : null;
@@ -177,36 +178,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         return () => clearInterval(interval);
     }, []);
 
-    // Helper para normalizar la configuración (DB -> State)
-    const normalizeConfig = useCallback((data: any) => {
-        if (!data) return config;
-        return {
-            ...data,
-            videoSource: data.video_source || data.videoSource,
-            youtubeVideoId: data.youtube_video_id || data.youtubeVideoId,
-            tickerMessage: data.ticker_message || data.tickerMessage,
-            tickerSpeed: data.ticker_speed || data.tickerSpeed,
-            salonName: data.salon_name || data.salonName,
-            salonAddress: data.salon_address || data.salonAddress,
-            salonPhone: data.salon_phone || data.salonPhone,
-            ticketFooter: data.ticket_footer || data.ticketFooter,
-            logoUrl: data.logo_url || data.logoUrl,
-            webhookUrl: data.webhook_url || data.webhookUrl,
-            ticketSize: data.ticket_size || data.ticketSize,
-            loyalty: {
-                enabled: (data.loyalty_enabled === 1 || data.loyalty_enabled === true) || (data.loyalty?.enabled),
-                pointsPerVisit: parseFloat(data.loyalty_points_per_visit || data.loyalty?.pointsPerVisit || 0),
-                redemptionThreshold: parseInt(data.loyalty_redemption_threshold || data.loyalty?.redemptionThreshold || 0),
-                redemptionValue: parseFloat(data.loyalty_redemption_value || data.loyalty?.redemptionValue || 0),
-                referralBonus: parseFloat(data.loyalty_referral_bonus || data.loyalty?.referralBonus || 0)
-            },
-            videoPlaylist: data.videoPlaylist || data.video_playlist || [],
-            hiddenPanels: data.hiddenPanels || (data.hidden_panels ? (typeof data.hidden_panels === 'string' ? JSON.parse(data.hidden_panels) : data.hidden_panels) : []),
-            latitude: parseFloat(data.latitude || data.lat || 0),
-            longitude: parseFloat(data.longitude || data.lng || 0),
-            geofenceRadius: parseInt(data.geofence_radius || data.geofenceRadius || 10),
-        };
-    }, [config]);
+    // normalizeConfig ahora está en ConfigContext
 
     // 1. CARGA INICIAL DESDE MYSQL (SYNC)
     const syncData = useCallback(async () => {
@@ -782,23 +754,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const updateAppointment = async (appt: Appointment) => { await updateAppointmentFromCtx(appt); };
     const deleteAppointment = async (id: string) => { await deleteAppointmentFromCtx(id); };
 
-    const updateConfig = async (newConfig: AppConfig): Promise<boolean> => {
-        try {
-            const res = await fetch(`${API_URL}/config`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newConfig)
-            });
-            if (res.ok) {
-                setConfig(newConfig);
-                return true;
-            }
-            return false;
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
-    };
+    const updateConfig = async (newConfig: AppConfig): Promise<boolean> => { return await updateConfigFromCtx(newConfig); };
 
     const addBranch = async (branch: Branch) => { return await addBranchFromCtx(branch); };
     const updateBranch = async (branch: Branch) => { return await updateBranchFromCtx(branch); };
@@ -894,7 +850,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     };
     const addProvider = (name: string) => { if (!providers.includes(name)) setProviders(prev => [...prev, name]); };
     const addMovementReason = (reason: string) => { if (!movementReasons.includes(reason)) setMovementReasons(prev => [...prev, reason]); };
-    const updateLocalPlaylist = (playlist: VideoItem[]) => setConfig((prev: any) => ({ ...prev, videoPlaylist: playlist }));
+    const updateLocalPlaylist = (playlist: VideoItem[]) => updateLocalPlaylistFromCtx(playlist);
     const logVideoActivity = () => { };
     const closeCashSession = async (summary: Omit<CashClosure, 'id' | 'closedAt'>) => {
         if (!cashSession) return;
