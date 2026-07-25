@@ -295,6 +295,9 @@ function addMissingColumns() {
     db.prepare("ALTER TABLE app_config ADD COLUMN longitude REAL DEFAULT 0").run();
     db.prepare("ALTER TABLE app_config ADD COLUMN geofence_radius INTEGER DEFAULT 10").run();
   }
+  if (!cols.includes('telegram_bot_token')) {
+    db.prepare("ALTER TABLE app_config ADD COLUMN telegram_bot_token TEXT").run();
+  }
   db.prepare("PRAGMA wal_checkpoint(TRUNCATE)").run();
 }
 
