@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useTickets } from '../context/TicketsContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { Ticket } from '../types';
 import { X, LogOut, ListVideo, Play, Info, Shuffle } from 'lucide-react';
 import { formatTimeES, formatDateES } from '../utils/dates';
@@ -14,7 +16,9 @@ interface QueueDisplayProps {
 }
 
 export const QueueDisplay = ({ onClose }: QueueDisplayProps) => {
-  const { tickets, config, logout, currentUser } = useBarber();
+  const { tickets } = useTickets();
+  const { config } = useConfigCtx();
+  const { logout, currentUser } = useBarber();
   const [servingTickets, setServingTickets] = useState<Ticket[]>([]);
   const [lastAnnouncedId, setLastAnnouncedId] = useState<string | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);

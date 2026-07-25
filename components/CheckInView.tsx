@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { Clock, MapPin, CheckCircle, XCircle, History } from 'lucide-react';
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -12,7 +13,8 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 export const CheckInView = () => {
-  const { currentUser, config, showToast } = useBarber();
+  const { config } = useConfigCtx();
+  const { currentUser, showToast } = useBarber();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lastAction, setLastAction] = useState<'CHECK_IN' | 'CHECK_OUT' | null>(null);
   const [gpsPos, setGpsPos] = useState<{ lat: number; lng: number } | null>(null);

@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useBarber } from '../context/BarberContext';
+import { useSales } from '../context/SalesContext';
+import { useCatalog } from '../context/CatalogContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { CashReportContent } from './CashReportContent';
 import { printReceipt } from '../services/printService';
 import {
@@ -16,7 +19,10 @@ interface CashReportProps {
 }
 
 export const CashReport = ({ navigateView }: CashReportProps) => {
-    const { sales, catalog, cashSession, cashClosures, config, closeCashSession, currentUser } = useBarber();
+    const { sales } = useSales();
+    const { catalog } = useCatalog();
+    const { config } = useConfigCtx();
+    const { cashSession, cashClosures, closeCashSession, currentUser } = useBarber();
 
     const [tab, setTab] = useState<'current' | 'history'>('current');
     const [viewingClosureId, setViewingClosureId] = useState<string | null>(null);

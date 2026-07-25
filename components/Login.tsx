@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { Scissors, Timer } from 'lucide-react';
 
 export const Login = () => {
-  const { login, config } = useBarber();
+  const { config } = useConfigCtx();
+  const { login } = useBarber();
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [warning, setWarning] = useState('');

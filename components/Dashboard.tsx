@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { POS } from './POS';
 import { Reception } from './Reception';
 import { QueueDisplay } from './QueueDisplay';
@@ -23,7 +24,8 @@ import {
 } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { currentUser, logout, config, installApp, isInstallable } = useBarber();
+  const { config } = useConfigCtx();
+  const { currentUser, logout, installApp, isInstallable } = useBarber();
   const [hiddenPanels, setHiddenPanels] = useState<string[]>(() => config?.hiddenPanels || []);
   useEffect(() => {
     setHiddenPanels(config?.hiddenPanels || []);

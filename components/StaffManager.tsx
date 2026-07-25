@@ -1,5 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useStaff } from '../context/StaffContext';
+import { useBranch } from '../context/BranchContext';
+import { useSales } from '../context/SalesContext';
+import { useTickets } from '../context/TicketsContext';
+import { useAgenda } from '../context/AgendaContext';
 import {
     Users, Plus, Edit, Shield, Save, RefreshCw,
     X, CheckCircle2, AlertCircle,
@@ -11,7 +16,12 @@ import { User, Role } from '../types';
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const StaffManager = () => {
-    const { users, branches, addUser, updateUser, removeUser, currentUser, sales, tickets, appointments } = useBarber();
+    const { users, addUser, updateUser, removeUser } = useStaff();
+    const { branches } = useBranch();
+    const { sales } = useSales();
+    const { tickets } = useTickets();
+    const { appointments } = useAgenda();
+    const { currentUser } = useBarber();
     const formScroll = useDragScroll();
 
     const isSuperAdmin = currentUser?.role === 'admin' && !currentUser.branchId;
