@@ -564,8 +564,8 @@ app.put('/api/config', (req, res) => {
   try {
     const tx = db().transaction(() => {
       db().prepare(
-        "INSERT INTO app_config (id, salon_name, salon_address, salon_phone, ticket_footer, logo_url, ticker_message, ticker_speed, youtube_video_id, webhook_url, ticket_size, hidden_panels) VALUES (1,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET salon_name=excluded.salon_name, salon_address=excluded.salon_address, salon_phone=excluded.salon_phone, ticket_footer=excluded.ticket_footer, logo_url=excluded.logo_url, ticker_message=excluded.ticker_message, ticker_speed=excluded.ticker_speed, youtube_video_id=excluded.youtube_video_id, webhook_url=excluded.webhook_url, ticket_size=excluded.ticket_size, hidden_panels=excluded.hidden_panels"
-      ).run(c.salonName || '', c.salonAddress || '', c.salonPhone || '', c.ticketFooter || '', c.logoUrl || '', c.tickerMessage || '', c.tickerSpeed || 20, c.youtubeVideoId || '', c.webhookUrl || '', c.ticketSize || '80mm', JSON.stringify(c.hiddenPanels || []));
+        "INSERT INTO app_config (id, salon_name, salon_address, salon_phone, ticket_footer, logo_url, ticker_message, ticker_speed, youtube_video_id, webhook_url, ticket_size, hidden_panels, telegram_bot_token) VALUES (1,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET salon_name=excluded.salon_name, salon_address=excluded.salon_address, salon_phone=excluded.salon_phone, ticket_footer=excluded.ticket_footer, logo_url=excluded.logo_url, ticker_message=excluded.ticker_message, ticker_speed=excluded.ticker_speed, youtube_video_id=excluded.youtube_video_id, webhook_url=excluded.webhook_url, ticket_size=excluded.ticket_size, hidden_panels=excluded.hidden_panels, telegram_bot_token=excluded.telegram_bot_token"
+      ).run(c.salonName || '', c.salonAddress || '', c.salonPhone || '', c.ticketFooter || '', c.logoUrl || '', c.tickerMessage || '', c.tickerSpeed || 20, c.youtubeVideoId || '', c.webhookUrl || '', c.ticketSize || '80mm', JSON.stringify(c.hiddenPanels || []), c.telegramBotToken || null);
 
       const playlistToSend = c.videoPlaylist || c.playlist;
       if (playlistToSend !== undefined && Array.isArray(playlistToSend)) {
@@ -743,6 +743,43 @@ app.post('/api/send-ticket', async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date(), database: 'sqlite' });
+});
+
+// =================================================================
+// TELEGRAM
+// =================================================================
+
+app.post('/api/send-telegram-reminder', async (req, res) => {
+  const { appointmentId } = req.body;
+  try {
+    const appt = db().prepare("SELECT * FROM appointments WHERE id = ?").get(appointmentId);
+    if (!appt) return res.status(404).json({ error: 'Cita no encontrada' });
+
+    const configRow = db().prepare("SELECT telegram_bot_token FROM app_config LIMIT 1").get();
+    if (!configRow?.telegram_bot_token) return res.status(400).json({ error: 'Token de bot no configurado' });
+
+    let chatId = null;
+    if (appt.barber_id) {
+      const barber = db().prepare("SELECT telegram_id FROM users WHERE id = ?").get(appt.barber_id);
+      if (barber?.telegram_id) chatId = barber.telegram_id;
+    }
+
+    if (!chatId) return res.json({ success: false, reason: 'Sin Telegram ID asignado' });
+
+    const message = `📅 <b>Recordatorio de Cita</b>\n\n👤 Cliente: ${appt.client_name}\n🕐 Hora: ${appt.time}\n✂️ Servicio: ${appt.service_type}\n\n🔔 La cita es en aproximadamente 30 minutos.`;
+
+    const telegramRes = await fetch(`https://api.telegram.org/bot${configRow.telegram_bot_token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' })
+    });
+
+    const ok = telegramRes.ok;
+    res.json({ success: ok });
+  } catch (e) {
+    console.error('Telegram error:', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // =================================================================

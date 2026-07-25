@@ -52,6 +52,7 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
     const [gpsLat, setGpsLat] = useState(config.latitude?.toString() || '13.706396');
     const [gpsLng, setGpsLng] = useState(config.longitude?.toString() || '-89.146180');
     const [gpsRadius, setGpsRadius] = useState(config.geofenceRadius?.toString() || '10');
+    const [telegramToken, setTelegramToken] = useState(config.telegramBotToken || '');
 
     // TV Settings
     const [videoPlaylist, setVideoPlaylist] = useState<any[]>(config.videoPlaylist || []);
@@ -92,7 +93,8 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
         setGpsLat(config.latitude?.toString() || '13.706396');
         setGpsLng(config.longitude?.toString() || '-89.146180');
         setGpsRadius(config.geofenceRadius?.toString() || '10');
-    }, [config.salonName, config.logoUrl, config.ticketFooter, config.ticketSize, config.webhookUrl, config.hiddenPanels, config.latitude, config.longitude, config.geofenceRadius]);
+        setTelegramToken(config.telegramBotToken || '');
+    }, [config.salonName, config.logoUrl, config.ticketFooter, config.ticketSize, config.webhookUrl, config.hiddenPanels, config.latitude, config.longitude, config.geofenceRadius, config.telegramBotToken]);
 
     useEffect(() => {
         if (videoPlaylist.length > 0 && !previewVideo) {
@@ -149,6 +151,7 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
             latitude: parseFloat(gpsLat),
             longitude: parseFloat(gpsLng),
             geofenceRadius: parseInt(gpsRadius),
+            telegramBotToken: telegramToken,
         });
         if (success) {
             if (logoUrl) updateFavicon(logoUrl);
@@ -367,6 +370,11 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
                                 <div className="space-y-2">
                                     <label className="text-[7px] sm:text-[8px] font-black text-emerald-500 uppercase tracking-widest ml-1 flex items-center gap-1.5"><Zap size={8} className="sm:size-[10px]" /> Webhook GAS Global</label>
                                     <input value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} className="w-full bg-rose-bg border border-rose-border rounded-xl py-2 sm:py-2.5 px-3 sm:px-4 text-rose-900 font-mono text-[8px] sm:text-[9px] outline-none focus:border-emerald-500 transition-all shadow-inner" placeholder="https://script.google.com/..." />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[7px] sm:text-[8px] font-black text-sky-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">🤖 Telegram Bot Token</label>
+                                    <input value={telegramToken} onChange={e => setTelegramToken(e.target.value)} className="w-full bg-rose-bg border border-rose-border rounded-xl py-2 sm:py-2.5 px-3 sm:px-4 text-rose-900 font-mono text-[8px] sm:text-[9px] outline-none focus:border-sky-500 transition-all shadow-inner" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz" type="password" />
                                 </div>
 
                                 <div className="space-y-2 sm:space-y-3">

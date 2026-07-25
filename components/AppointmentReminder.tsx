@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAgenda } from '../context/AgendaContext';
 import { Appointment } from '../types';
-import { Bell, Clock, Scissors, User, X, ChevronRight, Check } from 'lucide-react';
+import { Bell, Clock, Scissors, User, Check } from 'lucide-react';
+
+const API_URL = '/api';
 
 export const AppointmentReminder = () => {
   const { appointments } = useAgenda();
   const [alertAppt, setAlertAppt] = useState<Appointment | null>(null);
   const [snoozedUntil, setSnoozedUntil] = useState<Record<string, number>>({});
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
+  const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
+
+  const sendTelegramReminder = useCallback(async (appt: Appointment) => {
+    try {
+      await fetch(`${API_URL}/send-telegram-reminder`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointmentId: appt.id })
+      });
+    } catch (e) { /* Telegram es opcional */ }
+  }, []);
 
   const checkAppointments = useCallback(() => {
     const now = new Date();
@@ -25,12 +37,18 @@ export const AppointmentReminder = () => {
 
       if (apptMinutes > currentMinutes && apptMinutes <= in30Min) {
         if (snoozedUntil[appt.id] && Date.now() < snoozedUntil[appt.id]) continue;
+
+        if (!notifiedIds.has(appt.id)) {
+          setNotifiedIds(prev => new Set(prev).add(appt.id));
+          sendTelegramReminder(appt);
+        }
+
         setAlertAppt(appt);
         return;
       }
     }
     setAlertAppt(null);
-  }, [appointments, snoozedUntil, confirmedIds]);
+  }, [appointments, snoozedUntil, confirmedIds, notifiedIds, sendTelegramReminder]);
 
   useEffect(() => {
     checkAppointments();

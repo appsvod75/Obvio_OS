@@ -42,7 +42,8 @@ function initSchema() {
       loyalty_redemption_threshold INTEGER DEFAULT 5,
       loyalty_redemption_value REAL DEFAULT 5.00,
       loyalty_referral_bonus REAL DEFAULT 2.00,
-      hidden_panels TEXT DEFAULT '[]'
+      hidden_panels TEXT DEFAULT '[]',
+      telegram_bot_token TEXT
     );
 
     CREATE TABLE IF NOT EXISTS categories (

@@ -43,6 +43,7 @@ export const ConfigProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
       latitude: parseFloat(data.latitude || data.lat || 0),
       longitude: parseFloat(data.longitude || data.lng || 0),
       geofenceRadius: parseInt(data.geofence_radius || data.geofenceRadius || 10),
+      telegramBotToken: data.telegram_bot_token || data.telegramBotToken || '',
     };
   }, [config]);
 
