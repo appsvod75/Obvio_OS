@@ -1,6 +1,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useInventory } from '../context/InventoryContext';
+import { useCatalog } from '../context/CatalogContext';
+import { useBranch } from '../context/BranchContext';
 import {
     Search, Plus, Package, History, Store, X,
     Trash2, Hash, ShoppingCart, User, CheckCircle2,
@@ -34,10 +37,10 @@ const StatHeaderCard = ({ icon, label, value, sub, color }: { icon: React.ReactN
 );
 
 export const InventoryManager = () => {
-    const {
-        catalog, stocks, registerInventoryMovement, transferStock,
-        branches, currentUser, inventoryMovements, getBranchStock, confirmTransferIn, showToast
-    } = useBarber();
+    const { catalog } = useCatalog();
+    const { branches } = useBranch();
+    const { stocks, registerInventoryMovement, transferStock, inventoryMovements, getBranchStock, confirmTransferIn } = useInventory();
+    const { currentUser, showToast } = useBarber();
 
     const mainScroll = useDragScroll();
     const detailScroll = useDragScroll();

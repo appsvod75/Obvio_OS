@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useBarber } from '../context/BarberContext';
+import { useBranch } from '../context/BranchContext';
 import {
     Store, Plus, Edit, MapPin, Phone, Link2,
     CheckCircle2, Zap, Save, RefreshCw,
@@ -12,7 +12,7 @@ import { Branch, MonthlyPlan } from '../types';
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const BranchManager = () => {
-    const { branches, addBranch, updateBranch, monthlyPlans, upsertMonthlyPlan } = useBarber();
+    const { branches, addBranch, updateBranch, monthlyPlans, upsertMonthlyPlan } = useBranch();
     const branchScroll = useDragScroll();
 
     const [activeTab, setActiveTab] = useState<'config' | 'plan'>('config');

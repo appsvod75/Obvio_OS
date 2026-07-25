@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useBarber } from '../context/BarberContext';
+import { useCatalog } from '../context/CatalogContext';
+import { useSales } from '../context/SalesContext';
+import { useInventory } from '../context/InventoryContext';
 import {
   Search, Plus, Edit, X, Scissors, Package, Layers,
   Info, CheckCircle2, Tag, DollarSign, PlusCircle, List, LayoutGrid, Trash2, ChevronLeft
@@ -9,8 +12,10 @@ import { CatalogItem, ItemType } from '../types';
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const CatalogManager = () => {
-  const { catalog, addItem, updateItem, removeItem, categories,
-    addCategory, updateCategory, removeCategory, sales, inventoryMovements, stocks, showToast } = useBarber();
+  const { catalog, addItem, updateItem, removeItem, categories, addCategory, updateCategory, removeCategory } = useCatalog();
+  const { sales } = useSales();
+  const { inventoryMovements, stocks } = useInventory();
+  const { showToast } = useBarber();
 
   const mainScroll = useDragScroll();
   const detailScroll = useDragScroll();
