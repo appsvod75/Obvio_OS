@@ -6,6 +6,7 @@ import { useClients } from './ClientsContext';
 import { useCatalog } from './CatalogContext';
 import { usePromotions } from './PromotionsContext';
 import { useAgenda } from './AgendaContext';
+import { useStaff } from './StaffContext';
 
 import { nowES } from '../utils/dates';
 
@@ -83,7 +84,7 @@ const BarberContext = createContext<BarberContextType | undefined>(undefined);
 export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [monthlyPlans, setMonthlyPlans] = useState<MonthlyPlan[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
+    const { users, setUsers, addUser: addUserFromCtx, updateUser: updateUserFromCtx, removeUser: removeUserFromCtx } = useStaff();
     const { clients, setClients, addClient: addClientFromCtx, updateClient: updateClientFromCtx } = useClients();
     const {
         catalog, setCatalog, categories, setCategories,
@@ -747,34 +748,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
     // --- FUNCIONES LEGACY / PLACEHOLDERS (Para migración gradual) ---
     // --- FUNCIONES REALES DE ESCRITURA ---
-    const addUser = async (user: User) => {
-        try {
-            const res = await fetch(`${API_URL}/users`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-            if (res.ok) setUsers(prev => [...prev, user]);
-        } catch (e) { console.error(e); }
-    };
-
-    const updateUser = async (user: User) => {
-        try {
-            const res = await fetch(`${API_URL}/users/${user.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-            if (res.ok) setUsers(prev => prev.map(u => u.id === user.id ? user : u));
-        } catch (e) { console.error(e); }
-    };
-
-    const removeUser = async (id: string) => {
-        try {
-            const res = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
-            if (res.ok) setUsers(prev => prev.filter(u => u.id !== id));
-        } catch (e) { console.error(e); }
-    };
+    const addUser = async (user: User) => { await addUserFromCtx(user); };
+    const updateUser = async (user: User) => { await updateUserFromCtx(user); };
+    const removeUser = async (id: string) => { await removeUserFromCtx(id); };
 
     const addClient = async (client: Client) => {
         const ok = await addClientFromCtx(client);
