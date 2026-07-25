@@ -11,6 +11,7 @@ import { useBranch } from './BranchContext';
 import { useConfigCtx } from './ConfigContext';
 import { useInventory } from './InventoryContext';
 import { useTickets } from './TicketsContext';
+import { useSales } from './SalesContext';
 
 import { nowES } from '../utils/dates';
 
@@ -103,7 +104,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         addProvider: addProviderFromCtx, addMovementReason: addMovementReasonFromCtx
     } = useInventory();
     const { tickets, setTickets, fetchTickets: fetchTicketsFromCtx, createTicket: createTicketFromCtx, updateTicketStatus: updateTicketStatusFromCtx } = useTickets();
-    const [sales, setSales] = useState<Sale[]>([]);
+    const { sales, setSales, processSale: processSaleFromCtx, sendInvoiceByEmail: sendInvoiceByEmailFromCtx } = useSales();
     const { config, setConfig, normalizeConfig, updateConfig: updateConfigFromCtx, updateLocalPlaylist: updateLocalPlaylistFromCtx } = useConfigCtx();
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         const saved = localStorage.getItem('barber_session');
@@ -518,119 +519,84 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     };
 
     const processSale = async (sale: Sale) => {
-        try {
-            const res = await fetch(`${API_URL}/sales`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sale)
-            });
-            if (res.ok) {
-                setSales(prev => [...prev, sale]);
-                if (sale.ticketId) setTickets(prev => prev.filter(t => t.id !== sale.ticketId));
-
-                // Optimistic stock update
-                        setStocks(prevStocks => {
-                    let updatedStocks = [...prevStocks];
-                    (sale.items || []).forEach(item => {
-                        const catalogItem = catalog.find(ci => ci.id === item.itemId);
-                        if (!catalogItem) return;
-
-                        const deductStock = (itmId: string, qty: number) => {
-                            const stockIdx = updatedStocks.findIndex(s => s.branchId === sale.branchId && s.itemId === itmId);
-                            if (stockIdx !== -1) {
-                                updatedStocks[stockIdx] = {
-                                    ...updatedStocks[stockIdx],
-                                    stock: updatedStocks[stockIdx].stock - qty
-                                };
-                            }
-                        };
-
-                        if (catalogItem.type === 'product') {
-                            deductStock(item.itemId, item.quantity);
-                        } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
-                            (catalogItem.comboDefinition as string[]).forEach(subId => {
-                                const subItem = catalog.find(ci => ci.id === subId);
-                                if (subItem?.type === 'product') {
-                                    deductStock(subId, item.quantity);
-                                }
-                            });
-                        }
-                    });
-                    return updatedStocks;
-                });
-
-                // Optimistic Kardex update (Movements)
-                setInventoryMovements(prev => {
-                    const newMovs: InventoryMovement[] = [];
-                    (sale.items || []).forEach(item => {
-                        const catalogItem = catalog.find(ci => ci.id === item.itemId);
-                        if (!catalogItem) return;
-
-                        const createMov = (itmId: string, name: string, qty: number) => {
-                            const currentStock = stocks.find(s => s.branchId === sale.branchId && s.itemId === itmId);
-                            const prevStock = currentStock?.stock || 0;
-                            return {
-                                id: Math.random().toString(36).substring(2, 15),
-                                branchId: sale.branchId,
-                                itemId: itmId,
-                                itemName: name,
-                                type: 'sale' as InventoryMovementType,
-                                quantity: qty,
-                                unitCost: catalogItem.cost || 0,
-                                previousStock: prevStock,
-                                newStock: prevStock - qty,
-                                date: nowES(),
-                                reason: `Venta POS #${sale.ticketId || 'POS'}`,
-                                status: 'completed' as const
-                            };
-                        };
-
-                        if (catalogItem.type === 'product') {
-                            newMovs.push(createMov(item.itemId, item.name, item.quantity));
-                        } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
-                            (catalogItem.comboDefinition as string[]).forEach(subId => {
-                                const subItem = catalog.find(ci => ci.id === subId);
-                                if (subItem?.type === 'product') {
-                                    newMovs.push(createMov(subId, subItem.name, item.quantity));
-                                }
-                            });
-                        }
-                    });
-                    return [...prev, ...newMovs];
-                });
-
-                // Optimistic Client Points update
-                if (sale.clientId) {
-                    setClients(prevClients => prevClients.map(c => {
-                        if (c.id === sale.clientId) {
-                            const pointsEarned = sale.pointsEarned || 0;
-                            const pointsUsed = sale.pointsUsed || 0;
-                            return {
-                                ...c,
-                                points: (c.points || 0) + pointsEarned - pointsUsed,
-                                visits: (c.visits || 0) + 1
-                            };
-                        }
-                        return c;
-                    }));
-                }
-
-                return sale;
-            } else {
-                console.error("Error backend sale:", res.status, res.statusText);
-                try {
-                    const errData = await res.json();
-                    showToast('error', 'Error Venta', errData.error || res.statusText);
-                } catch (jsonErr) {
-                    showToast('error', 'Error Venta', `${res.status} ${res.statusText}`);
-                }
-                return null;
-            }
-        } catch (e) {
-            console.error(e);
-            showToast('error', 'Error Conexión', String(e));
+        const result = await processSaleFromCtx(sale);
+        if (!result) {
+            showToast('error', 'Error Venta', 'No se pudo procesar la venta en el servidor.');
             return null;
         }
+
+        if (sale.ticketId) setTickets(prev => prev.filter(t => t.id !== sale.ticketId));
+
+        setStocks(prevStocks => {
+            let updatedStocks = [...prevStocks];
+            (sale.items || []).forEach(item => {
+                const catalogItem = catalog.find(ci => ci.id === item.itemId);
+                if (!catalogItem) return;
+
+                const deductStock = (itmId: string, qty: number) => {
+                    const stockIdx = updatedStocks.findIndex(s => s.branchId === sale.branchId && s.itemId === itmId);
+                    if (stockIdx !== -1) {
+                        updatedStocks[stockIdx] = { ...updatedStocks[stockIdx], stock: updatedStocks[stockIdx].stock - qty };
+                    }
+                };
+
+                if (catalogItem.type === 'product') {
+                    deductStock(item.itemId, item.quantity);
+                } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
+                    (catalogItem.comboDefinition as string[]).forEach(subId => {
+                        const subItem = catalog.find(ci => ci.id === subId);
+                        if (subItem?.type === 'product') deductStock(subId, item.quantity);
+                    });
+                }
+            });
+            return updatedStocks;
+        });
+
+        setInventoryMovements(prev => {
+            const newMovs: InventoryMovement[] = [];
+            (sale.items || []).forEach(item => {
+                const catalogItem = catalog.find(ci => ci.id === item.itemId);
+                if (!catalogItem) return;
+
+                const createMov = (itmId: string, name: string, qty: number) => {
+                    const currentStock = stocks.find(s => s.branchId === sale.branchId && s.itemId === itmId);
+                    const prevStock = currentStock?.stock || 0;
+                    return {
+                        id: Math.random().toString(36).substring(2, 15),
+                        branchId: sale.branchId, itemId: itmId, itemName: name,
+                        type: 'sale' as InventoryMovementType, quantity: qty,
+                        unitCost: catalogItem.cost || 0,
+                        previousStock: prevStock, newStock: prevStock - qty,
+                        date: nowES(),
+                        reason: `Venta POS #${sale.ticketId || 'POS'}`,
+                        status: 'completed' as const
+                    };
+                };
+
+                if (catalogItem.type === 'product') {
+                    newMovs.push(createMov(item.itemId, item.name, item.quantity));
+                } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
+                    (catalogItem.comboDefinition as string[]).forEach(subId => {
+                        const subItem = catalog.find(ci => ci.id === subId);
+                        if (subItem?.type === 'product') newMovs.push(createMov(subId, subItem.name, item.quantity));
+                    });
+                }
+            });
+            return [...prev, ...newMovs];
+        });
+
+        if (sale.clientId) {
+            setClients(prevClients => prevClients.map(c => {
+                if (c.id === sale.clientId) {
+                    const pointsEarned = sale.pointsEarned || 0;
+                    const pointsUsed = sale.pointsUsed || 0;
+                    return { ...c, points: (c.points || 0) + pointsEarned - pointsUsed, visits: (c.visits || 0) + 1 };
+                }
+                return c;
+            }));
+        }
+
+        return sale;
     };
 
     const checkCashSession = async (branchId: string, date?: string) => {
@@ -762,16 +728,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
             saleId: (sale.id || '').substring(0, 8).toUpperCase(),
             date: dateObj.toLocaleDateString('es-ES'),
             time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            barber: barber,
-            clientName: clientName,
-            items: (sale.items || []).map(i => ({
-                name: i.name,
-                quantity: i.quantity,
-                price: i.price
-            })),
-            subtotal: sale.subtotal,
-            discount: sale.discount,
-            total: sale.total,
+            barber, clientName,
+            items: (sale.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            subtotal: sale.subtotal, discount: sale.discount, total: sale.total,
             pointsUsed: sale.pointsUsed || 0,
             paymentMethod: (sale.payments || []).map(p => {
                 const m: any = { cash: 'Efectivo', card: 'Tarjeta', transfer: 'Transferencia', bitcoin: 'Bitcoin' };
@@ -781,20 +740,12 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
         try {
             const res = await fetch(`${API_URL}/send-ticket`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    branchId: sale.branchId,
-                    email,
-                    ticketData
-                })
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ branchId: sale.branchId, email, ticketData })
             });
             const data = await res.json();
             return data.success;
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
+        } catch (e) { console.error(e); return false; }
     };
 
     const addPromotion = async (promo: Promotion) => {
