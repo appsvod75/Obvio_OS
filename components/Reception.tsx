@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useBarber } from '../context/BarberContext';
+import { useTickets } from '../context/TicketsContext';
+import { useClients } from '../context/ClientsContext';
+import { useStaff } from '../context/StaffContext';
+import { useBranch } from '../context/BranchContext';
+import { useConfigCtx } from '../context/ConfigContext';
+import { useCatalog } from '../context/CatalogContext';
 import { TurnTicketContent } from './TurnTicketContent';
 import { printReceipt } from '../services/printService';
 import { Scissors, UserPlus, User, Search, ArrowRight, ArrowUp, Printer, Clock, CheckCircle, Users, AlertCircle, Mail, DollarSign, LogOut, Gift, UserCheck } from 'lucide-react';
@@ -45,7 +51,13 @@ interface ReceptionProps {
 }
 
 export const Reception = ({ navigateView }: ReceptionProps) => {
-  const { createTicket, clients, addClient, tickets, users, updateTicketStatus, currentUser, branches, config, logout, catalog, categories } = useBarber();
+  const { createTicket, tickets, updateTicketStatus } = useTickets();
+  const { clients, addClient } = useClients();
+  const { users } = useStaff();
+  const { branches } = useBranch();
+  const { config } = useConfigCtx();
+  const { catalog, categories } = useCatalog();
+  const { currentUser, logout } = useBarber();
   const clientSearchScroll = useDragScroll();
   const queueScroll = useDragScroll();
   const [view, setView] = useState<'ticket' | 'newClient'>('ticket');

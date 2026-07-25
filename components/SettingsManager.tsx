@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useConfigCtx } from '../context/ConfigContext';
+import { useBranch } from '../context/BranchContext';
 import {
     Settings, Save, CheckCircle2, Tv, ListVideo, Plus,
     Trash2, Youtube, FileVideo, Scissors, Printer, RefreshCcw,
@@ -35,10 +37,9 @@ const allPanels = [
 ];
 
 export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey }) => {
-    const {
-        config, updateConfig, branches, updateBranch,
-        factoryReset, currentUser
-    } = useBarber();
+    const { config, updateConfig } = useConfigCtx();
+    const { branches, updateBranch } = useBranch();
+    const { factoryReset, currentUser } = useBarber();
 
     const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 

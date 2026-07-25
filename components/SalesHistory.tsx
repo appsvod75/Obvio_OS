@@ -3,6 +3,11 @@ import { formatDateES, formatTimeES } from '../utils/dates';
 
 import { createPortal } from 'react-dom';
 import { useBarber } from '../context/BarberContext';
+import { useSales } from '../context/SalesContext';
+import { useClients } from '../context/ClientsContext';
+import { useStaff } from '../context/StaffContext';
+import { useCatalog } from '../context/CatalogContext';
+import { useConfigCtx } from '../context/ConfigContext';
 import { TicketContent } from './TicketContent';
 import { printReceipt } from '../services/printService';
 import { Search, Calendar, User, DollarSign, Printer, ArrowLeft, Filter, Trash2, Eye, X, Mail, Receipt, CheckCircle2, RefreshCw, ShoppingCart } from 'lucide-react';
@@ -22,7 +27,12 @@ const paymentMethods: Partial<Record<PaymentMethod, string>> = {
 };
 
 export const SalesHistory = ({ navigateView, hideSummary = false }: SalesHistoryProps) => {
-    const { sales, clients, users, catalog, config, sendInvoiceByEmail, showToast } = useBarber();
+    const { sales } = useSales();
+    const { clients } = useClients();
+    const { users } = useStaff();
+    const { catalog } = useCatalog();
+    const { config } = useConfigCtx();
+    const { sendInvoiceByEmail, showToast } = useBarber();
     const scroll = useDragScroll();
     const [search, setSearch] = useState('');
 

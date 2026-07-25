@@ -1,5 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useAgenda } from '../context/AgendaContext';
+import { useStaff } from '../context/StaffContext';
+import { useBranch } from '../context/BranchContext';
+import { useTickets } from '../context/TicketsContext';
+import { useClients } from '../context/ClientsContext';
+import { useCatalog } from '../context/CatalogContext';
 import { Appointment, TicketType } from '../types';
 import { Calendar, Clock, User, Scissors, Plus, Check, X, Phone, FileText, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDateES } from '../utils/dates';
@@ -14,7 +20,13 @@ const services = [
 ];
 
 export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void }) => {
-    const { appointments, users, branches, currentUser, addAppointment, updateAppointment, deleteAppointment, createTicket, clients, categories, showToast } = useBarber();
+    const { appointments, addAppointment, updateAppointment, deleteAppointment } = useAgenda();
+    const { users } = useStaff();
+    const { branches } = useBranch();
+    const { createTicket } = useTickets();
+    const { clients } = useClients();
+    const { categories } = useCatalog();
+    const { currentUser, showToast } = useBarber();
 
     const today = new Date();
     const [currentMonth, setCurrentMonth] = useState(today.getMonth());

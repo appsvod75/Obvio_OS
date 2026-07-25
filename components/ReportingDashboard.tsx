@@ -1,6 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { useBarber } from '../context/BarberContext';
+import { useSales } from '../context/SalesContext';
+import { useCatalog } from '../context/CatalogContext';
+import { useBranch } from '../context/BranchContext';
+import { useStaff } from '../context/StaffContext';
 import {
     BarChart3, TrendingUp, Users, DollarSign, Calendar,
     Target, Scissors, Package, Layers, Store, Award,
@@ -10,7 +13,10 @@ import {
 import { useDragScroll } from '../hooks/useDragScroll';
 
 export const ReportingDashboard = () => {
-    const { sales, catalog, branches, users, monthlyPlans } = useBarber();
+    const { sales } = useSales();
+    const { catalog } = useCatalog();
+    const { branches, monthlyPlans } = useBranch();
+    const { users } = useStaff();
     const monitorScroll = useDragScroll();
     const staffScroll = useDragScroll();
     const exportScroll = useDragScroll();
