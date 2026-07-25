@@ -8,7 +8,7 @@ Sistema POS para barbería/salón con gestión de ventas, tickets (cola), agenda
 - **Backend**: Express + Socket.IO + SQLite (better-sqlite3)
 - **Notificaciones**: Toast integrado (sin Telegram aún)
 - **Impresión**: RawBT (Android) + window.print (PC)
-- **Tiempo real**: Socket.IO para actualización de tickets, cierre de caja, force logout
+- **Tiempo real**: Socket.IO para todos los CRUD (clientes, catálogo, usuarios, sucursales, promociones, citas, inventario, ventas, tickets, caja, config)
 
 ## Estructura del Proyecto
 ```
@@ -59,7 +59,7 @@ obvio_OS/
 │   ├── useDragScroll.ts        # Drag-to-scroll con soporte touch
 │   └── ... (otros stores wrapper)
 ├── server/
-│   ├── server.js               # Express + Socket.IO (721 líneas)
+│   ├── server.js               # Express + Socket.IO (~832 líneas)
 │   └── db.js                   # SQLite schema + seed
 ├── services/
 │   └── printService.ts         # Impresión RawBT / window.print
@@ -73,16 +73,17 @@ obvio_OS/
 ## Flujo de Trabajo (Desarrollo → Producción)
 
 ```
-[Local]                  [VPS Propietario]
-─────────────────────────────────────────────────
+[Local]                               [VPS — root@64.23.176.98]
+────────────────────────────────────────────────────────────────
 1. Trabajar en local
-2. npm run build
-   → genera dist/       3. Subir dist/ + server/ al VPS
-4. Configurar Nginx:
-   - Servir dist/ como frontend
-   - Proxy reverso /api y /socket.io → :3001
-5. node server/server.js
-6. Acceder vía dominio/dirección IP
+2. git add . && git commit -m "mensaje"
+3. git push origin main               ← Sincronizar GitHub ANTES de cerrar sesión
+4. npm run build
+   → genera dist/
+5. rsync -avz dist/ root@[vps]:/var/www/thealanis/dist/
+6. rsync -avz server/server.js root@[vps]:/var/www/thealanis/server/
+7. ssh root@[vps] "pm2 restart thealanis-os"
+8. Verificar en https://thealanis.luckyapps.online
 ```
 
 ## Funcionalidades Clave
@@ -155,10 +156,12 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - `GET /api/health` — Health check
 
 ## Socket.IO Events
-- `tickets_update` — Actualización de cola en tiempo real
-- `sync_needed` — Forzar sincronización
-- `force_logout` — Deslogueo forzado (3:00 AM)
+- `tickets_update` — Actualización de cola en tiempo real (sala por sucursal)
+- `sync_needed` — Forzar sincronización completa (se emite tras cada CRUD: clients, users, catalog, categories, branches, monthly_plans, promotions, appointments, cash_session, inventory, sales, config, cleanup, admin_reset)
 - `config_init`, `config_update` — Config en tiempo real
+- `attendance_update` — Marcación de entrada/salida
+- `force_logout` — Deslogueo forzado (3:00 AM)
+- Frontend usa debounce de 500ms en `sync_needed` para agrupar cambios rápidos
 
 ## Sidebar
 - **Nuevo comportamiento**: oculta en todos los tamaños de pantalla, se abre al tocar el menú hamburguesa (3 líneas)
@@ -202,12 +205,13 @@ Toda la app usa exclusivamente `clamp(min, vmin, max)` sin breakpoints fijos:
 - BranchManager: panel izquierdo con overflow-y-auto para formularios largos
 
 ## Issues Conocidos / Pendientes
-- BarberContext es un God Object (~1188 líneas) — pendiente de refactorizar en contextos más pequeños
+- BarberContext es un God Object (~1212 líneas) — pendiente de refactorizar en contextos más pequeños
 - No hay migraciones de DB — los cambios de schema se manejan con ALTER TABLE en seedIfEmpty
 - La app usa el role `'estilista'` (no `'barber'`)
 - Integración con Telegram bot pendiente para notificaciones
 - Los tickets de recepción con códigos multi-letra (ej: CE+PE) no mapean automáticamente a productos en el POS
 - Inventario de insumos + recetas de servicios (bom list) — pendiente de implementar
+- El `sync_needed` actual hace sync completo de todos los datos — optimizable a eventos por entidad específica
 
 ## Cómo Correr (Desarrollo)
 ```bash
@@ -216,6 +220,12 @@ npm run dev        # Frontend :3000 + Backend :3017
 npm run build      # Build producción
 npm run server     # Solo backend
 ```
+
+## Git & GitHub
+- **Repositorio**: https://github.com/appsvod75/Obvio_OS
+- **Siempre hacer `git push origin main` antes de cerrar sesión**
+- Flujo: `git add . && git commit -m "mensaje" && git push origin main`
+- Si hay múltiples desarrolladores: `git pull` antes de empezar a trabajar
 
 ## Despliegue en VPS (Nginx)
 

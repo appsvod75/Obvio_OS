@@ -222,7 +222,14 @@ Esto es más preciso que una estimación calendario porque:
 
 ---
 
-## 11. Atajos y Tips
+## 11. GitHub & Control de Versiones
+
+- **Repositorio**: https://github.com/appsvod75/Obvio_OS
+- **Workflow**: trabajar en local → commit → push → build → rsync → pm2 restart
+- **Siempre hacer `git push origin main` ANTES de cerrar sesión**, para mantener el historial sincronizado
+- Si alguien más trabaja en el proyecto, hacer `git pull` antes de empezar
+
+## 12. Atajos y Tips
 
 - **F5** → Recargar página (para ver cambios)
 - **F12** → Consola del navegador para debug
@@ -232,21 +239,31 @@ Esto es más preciso que una estimación calendario porque:
 
 ---
 
-## 12. Despliegue en VPS (Nginx) — thealanis.luckyapps.online
+## 13. Despliegue en VPS (Nginx) — thealanis.luckyapps.online
 
-### Flujo de Trabajo
+### Flujo de Trabajo (Actual)
 ```
-[Local]                  [VPS Propietario — 64.23.176.98]
-────────────────────────────────────────────────────────────
+[Local]                               [VPS — root@64.23.176.98]
+────────────────────────────────────────────────────────────────
+1. Trabajar en local
+2. git add . && git commit -m "mensaje"   ← Commit a GitHub
+3. git push origin main                    ← Sincronizar siempre ANTES de cerrar sesión
+4. npm run build                           ← Genera dist/
+5. rsync -avz dist/ root@[vps]:/var/www/thealanis/dist/
+6. rsync -avz server/server.js root@[vps]:/var/www/thealanis/server/
+7. ssh root@[vps] "pm2 restart thealanis-os"
+8. Verificar en https://thealanis.luckyapps.online
+```
+
+### Flujo de Trabajo (Completo — primera vez/backends múltiples)
+```
 1. Trabajar en local
 2. npm run build
-   → genera dist/
 3. rsync -avz dist/ root@[vps]:/var/www/thealanis/dist/
 4. rsync -avz server/ root@[vps]:/var/www/thealanis/server/
 5. rsync -avz package.json root@[vps]:/var/www/thealanis/
-6. En el VPS: cd /var/www/thealanis && npm install --production
-7. Nginx configurado (SSL con Certbot)
-8. pm2 start server/server.js --name thealanis-os
+6. ssh root@[vps] "cd /var/www/thealanis && npm install --production"
+7. ssh root@[vps] "pm2 restart thealanis-os"
 ```
 
 ### Nginx Config (con SSL)
@@ -282,10 +299,15 @@ server {
 npm run build && rsync -avz dist/ root@64.23.176.98:/var/www/thealanis/dist/
 ```
 
-### Subir cambios backend
+### Subir cambios backend (server.js)
 ```bash
-rsync -avz server/ root@64.23.176.98:/var/www/thealanis/server/
-ssh root@64.23.176.98 "cd /var/www/thealanis && pm2 restart thealanis-os"
+rsync -avz server/server.js root@64.23.176.98:/var/www/thealanis/server/
+ssh root@64.23.176.98 "pm2 restart thealanis-os"
+```
+
+### Subir ambos (full deploy)
+```bash
+npm run build && rsync -avz dist/ root@64.23.176.98:/var/www/thealanis/dist/ && rsync -avz server/server.js root@64.23.176.98:/var/www/thealanis/server/ && ssh root@64.23.176.98 "pm2 restart thealanis-os"
 ```
 
 ### Si el puerto se desincroniza
@@ -301,7 +323,7 @@ ssh root@64.23.176.98 "cd /var/www/thealanis && pm2 restart thealanis-os"
 
 ---
 
-## 13. Próximos Pasos Sugeridos
+## 14. Próximos Pasos Sugeridos
 
 1. Refactorizar BarberContext en contextos más pequeños
 2. Integrar notificaciones vía Telegram
