@@ -90,9 +90,9 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
         setTicketSize(config.ticketSize || '58mm');
         setWebhookUrl(config.webhookUrl || '');
         setHiddenPanels(config.hiddenPanels || []);
-        setGpsLat(config.latitude?.toString() || '13.706396');
-        setGpsLng(config.longitude?.toString() || '-89.146180');
-        setGpsRadius(config.geofenceRadius?.toString() || '10');
+        setGpsLat(config.latitude ? String(config.latitude) : '13.706396');
+        setGpsLng(config.longitude ? String(config.longitude) : '-89.146180');
+        setGpsRadius(config.geofenceRadius ? String(config.geofenceRadius) : '10');
         setTelegramToken(config.telegramBotToken || '');
     }, [config.salonName, config.logoUrl, config.ticketFooter, config.ticketSize, config.webhookUrl, config.hiddenPanels, config.latitude, config.longitude, config.geofenceRadius, config.telegramBotToken]);
 

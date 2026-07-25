@@ -43,7 +43,10 @@ function initSchema() {
       loyalty_redemption_value REAL DEFAULT 5.00,
       loyalty_referral_bonus REAL DEFAULT 2.00,
       hidden_panels TEXT DEFAULT '[]',
-      telegram_bot_token TEXT
+      telegram_bot_token TEXT,
+      latitude TEXT DEFAULT '13.706396',
+      longitude TEXT DEFAULT '-89.146180',
+      geofence_radius INTEGER DEFAULT 10
     );
 
     CREATE TABLE IF NOT EXISTS categories (

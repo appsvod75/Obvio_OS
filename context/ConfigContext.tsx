@@ -40,8 +40,8 @@ export const ConfigProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
       },
       videoPlaylist: data.videoPlaylist || data.video_playlist || [],
       hiddenPanels: data.hiddenPanels || (data.hidden_panels ? (typeof data.hidden_panels === 'string' ? JSON.parse(data.hidden_panels) : data.hidden_panels) : []),
-      latitude: parseFloat(data.latitude || data.lat || 0),
-      longitude: parseFloat(data.longitude || data.lng || 0),
+      latitude: data.latitude || data.lat || undefined,
+      longitude: data.longitude || data.lng || undefined,
       geofenceRadius: parseInt(data.geofence_radius || data.geofenceRadius || 10),
       telegramBotToken: data.telegram_bot_token || data.telegramBotToken || '',
     };
