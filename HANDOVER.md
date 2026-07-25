@@ -6,7 +6,7 @@ Sistema POS para barbería/salón con gestión de ventas, tickets (cola), agenda
 ## Stack Tecnológico
 - **Frontend**: React 19 + TypeScript + Vite 6 + Tailwind CSS 4 + shadcn/ui
 - **Backend**: Express + Socket.IO + SQLite (better-sqlite3)
-- **Notificaciones**: Toast integrado (sin Telegram aún)
+- **Notificaciones**: Toast integrado + Telegram bot
 - **Impresión**: RawBT (Android) + window.print (PC)
 - **Tiempo real**: Socket.IO para todos los CRUD (clientes, catálogo, usuarios, sucursales, promociones, citas, inventario, ventas, tickets, caja, config)
 
@@ -22,10 +22,21 @@ obvio_OS/
 ├── vite.config.ts             # Proxy: /api y /socket.io → :3001
 ├── components.json            # shadcn/ui config
 ├── context/
-│   └── BarberContext.tsx       # ~1188 líneas — Estado global (God Object pendiente de refactor)
+│   ├── BarberContext.tsx       # ~822 líneas — Auth, socket, coordinación (reducido)
+│   ├── ClientsContext.tsx      # Clientes
+│   ├── CatalogContext.tsx      # Catálogo + categorías
+│   ├── PromotionsContext.tsx   # Promociones
+│   ├── AgendaContext.tsx       # Citas/Agenda
+│   ├── StaffContext.tsx        # Usuarios/empleados
+│   ├── BranchContext.tsx       # Sucursales + planes mensuales
+│   ├── ConfigContext.tsx       # Config general + Telegram token
+│   ├── InventoryContext.tsx    # Inventario, stocks, movimientos
+│   ├── TicketsContext.tsx      # Tickets de cola
+│   └── SalesContext.tsx        # Ventas
 ├── components/
 │   ├── Login.tsx               # Login con PIN, auto-login, bloqueo 3 intentos/60s
 │   ├── POS.tsx                 # Terminal POS (tickets + directo)
+│   ├── AppointmentReminder.tsx # Alerta 30min antes de cita con voz y Telegram
 │   ├── CartSidebar.tsx         # Carrito lateral con métodos de pago
 │   ├── ReceiptModal.tsx        # Modal de ticket post-venta (con clamp/vmin)
 │   ├── TicketContent.tsx       # Contenido del ticket de venta
@@ -154,31 +165,22 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - `GET /api/backup` — Descargar backup DB
 - `POST /api/cleanup` — Limpiar datos por período
 - `GET /api/health` — Health check
+- `POST /api/send-telegram-reminder` — Enviar notificación Telegram al estilista
+- `POST /api/attendance` — Marcación de entrada/salida
 
 ## Socket.IO Events
 - `tickets_update` — Actualización de cola en tiempo real (sala por sucursal)
-- `sync_needed` — Forzar sincronización completa (se emite tras cada CRUD: clients, users, catalog, categories, branches, monthly_plans, promotions, appointments, cash_session, inventory, sales, config, cleanup, admin_reset)
+- `sync_needed` — Forzar sincronización completa (se emite tras cada CRUD con debounce 500ms)
 - `config_init`, `config_update` — Config en tiempo real
 - `attendance_update` — Marcación de entrada/salida
 - `force_logout` — Deslogueo forzado (3:00 AM)
-- Frontend usa debounce de 500ms en `sync_needed` para agrupar cambios rápidos
 
 ## Sidebar
-- **Nuevo comportamiento**: oculta en todos los tamaños de pantalla, se abre al tocar el menú hamburguesa (3 líneas)
+- Oculta por defecto, se abre al tocar el menú hamburguesa (3 líneas)
 - Muestra iconos + texto completo siempre
 - Fondo oscuro semitransparente al abrirse, se cierra al tocar fuera o navegar
 - Sticky logo arriba, sticky usuario abajo, scroll solo en items del menú
-
-## Responsive Design Pattern
-Se usa `clamp(min, vmin, max)` para escalar proporcional:
-- Textos: `clamp(8px, 2vmin, 14px)`
-- Padding: `clamp(4px, 1vmin, 16px)`
-- Iconos: `style={{ width: 'clamp(14px, 3vmin, 20px)', height: '...' }}`
-- Modal del ticket usa `vmin` para mantener proporción en vertical y horizontal
-- Breakpoints: `sm: 640px | md: 768px | lg: 1024px | xl: 1280px`
-
-## Responsive Design
-Toda la app usa exclusivamente `clamp(min, vmin, max)` sin breakpoints fijos:
+- Items filtrados por rol, permiso y hiddenPanels
 - Vista de Inventario completa con clamp (tablas, modales ERP, recepción, kardex)
 - Vista de Promociones completa con clamp (grid promos, lealtad, modal campaña)
 - Vista de Sucursales completa con clamp (formulario config + plan, cards network deck)
@@ -205,13 +207,13 @@ Toda la app usa exclusivamente `clamp(min, vmin, max)` sin breakpoints fijos:
 - BranchManager: panel izquierdo con overflow-y-auto para formularios largos
 
 ## Issues Conocidos / Pendientes
-- BarberContext es un God Object (~1212 líneas) — pendiente de refactorizar en contextos más pequeños
+- BarberContext reducido de ~1212 a ~822 líneas, pendiente terminar de migrar auth/toast/cash a contextos propios
 - No hay migraciones de DB — los cambios de schema se manejan con ALTER TABLE en seedIfEmpty
 - La app usa el role `'estilista'` (no `'barber'`)
-- Integración con Telegram bot pendiente para notificaciones
 - Los tickets de recepción con códigos multi-letra (ej: CE+PE) no mapean automáticamente a productos en el POS
 - Inventario de insumos + recetas de servicios (bom list) — pendiente de implementar
 - El `sync_needed` actual hace sync completo de todos los datos — optimizable a eventos por entidad específica
+- Telegram: se necesita crear un bot en @BotFather y pegar el token en Config → Telegram Bot Token
 
 ## Cómo Correr (Desarrollo)
 ```bash

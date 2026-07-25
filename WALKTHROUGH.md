@@ -89,9 +89,20 @@ Los iconos visibles se controlan desde **Configuración → Paneles**.
 
 ### Modal de Cita
 - Cliente: búsqueda con sugerencias
-- Servicio: chips seleccionables (desde categorías del catálogo)
+- Servicio: chips con las mismas categorías del catálogo (dinámicos)
 - Estilista: selector
 - Fecha, hora, teléfono, notas
+
+---
+
+## 5b. Recordatorio Automático de Citas
+
+Aparece un **modal persistente** 30 minutos antes de cada cita con:
+- Nombre del cliente, hora y servicio
+- Botón **"Recordar en 5 min"** → silencia y reaparece a los 5 minutos
+- Botón **"Confirmado"** → no vuelve a salir (persiste en el dispositivo)
+- **Voz** (SpeechSynthesis) dice: "Cliente X, servicio Y, a las Z"
+- **Telegram**: si configuraste Token del Bot y los empleados tienen Telegram ID, envía notificación automática al estilista asignado
 
 ---
 
@@ -132,6 +143,7 @@ Esto es más preciso que una estimación calendario porque:
 - Nombre comercial, logo (subida o URL), pie de ticket
 - Tamaño de papel térmico (58mm / 80mm)
 - Webhook GAS para envío de tickets por email
+- **Telegram Bot Token**: pega el token de tu bot de @BotFather para activar notificaciones
 
 ### Cartelera TV
 - Gestión de playlist de videos
@@ -146,6 +158,13 @@ Esto es más preciso que una estimación calendario porque:
 - **Backup DB**: descarga el archivo salon.db con checkpoint previo
 - **Limpieza por período**: seleccionar tabla (ventas, tickets, citas, etc.) y rango de fechas
 - Emite `sync_needed` para refrescar datos automáticamente
+
+### Telegram (Notificaciones)
+1. Habla con **@BotFather** en Telegram y crea un bot con `/newbot`
+2. Copia el **token** que te da (ej: `123456:ABCdef...`)
+3. Pégalo en **Configuración General → Telegram Bot Token**
+4. En **Usuarios/Staff**, asigna el **Telegram ID** de cada empleado (su @username o ID numérico)
+5. Cuando se active el recordatorio de cita, el estilista recibirá el mensaje automáticamente
 
 ---
 
@@ -325,10 +344,9 @@ npm run build && rsync -avz dist/ root@64.23.176.98:/var/www/thealanis/dist/ && 
 
 ## 14. Próximos Pasos Sugeridos
 
-1. Refactorizar BarberContext en contextos más pequeños
-2. Integrar notificaciones vía Telegram
-3. Mapeo automático de códigos multi-letra a productos en POS
-4. Pruebas en producción (build)
-5. Migraciones de DB automatizadas
-6. Filtrar proyección por rango de fechas en ReportingDashboard
-7. Editar/borrar planes mensuales existentes desde la UI
+1. Terminar de extraer auth, toast y cash de BarberContext a contextos propios
+2. Mapeo automático de códigos multi-letra a productos en POS
+3. Migraciones de DB automatizadas
+4. Filtrar proyección por rango de fechas en ReportingDashboard
+5. Editar/borrar planes mensuales existentes desde la UI
+6. Optimizar `sync_needed` a eventos por entidad (evitar sync completo)
