@@ -8,6 +8,7 @@ import { StaffProvider } from './context/StaffContext';
 import { BranchProvider } from './context/BranchContext';
 import { ConfigProvider } from './context/ConfigContext';
 import { InventoryProvider } from './context/InventoryContext';
+import { TicketsProvider } from './context/TicketsContext';
 import { AppRoutes } from './components/layout/AppRoutes';
 
 function App() {
@@ -21,9 +22,11 @@ function App() {
                 <BranchProvider>
                   <ConfigProvider>
                     <InventoryProvider>
-                      <BarberProvider>
+                      <TicketsProvider>
+                        <BarberProvider>
               <AppRoutes />
             </BarberProvider>
+                      </TicketsProvider>
                     </InventoryProvider>
                   </ConfigProvider>
                 </BranchProvider>

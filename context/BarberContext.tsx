@@ -10,6 +10,7 @@ import { useStaff } from './StaffContext';
 import { useBranch } from './BranchContext';
 import { useConfigCtx } from './ConfigContext';
 import { useInventory } from './InventoryContext';
+import { useTickets } from './TicketsContext';
 
 import { nowES } from '../utils/dates';
 
@@ -101,7 +102,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         transferStock: transferStockFromCtx, confirmTransferIn: confirmTransferInFromCtx,
         addProvider: addProviderFromCtx, addMovementReason: addMovementReasonFromCtx
     } = useInventory();
-    const [tickets, setTickets] = useState<Ticket[]>([]);
+    const { tickets, setTickets, fetchTickets: fetchTicketsFromCtx, createTicket: createTicketFromCtx, updateTicketStatus: updateTicketStatusFromCtx } = useTickets();
     const [sales, setSales] = useState<Sale[]>([]);
     const { config, setConfig, normalizeConfig, updateConfig: updateConfigFromCtx, updateLocalPlaylist: updateLocalPlaylistFromCtx } = useConfigCtx();
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -507,71 +508,13 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     };
 
 
-    const fetchTickets = async (branchId?: string) => {
-        try {
-            const url = branchId ? `${API_URL}/tickets?branchId=${branchId}` : `${API_URL}/tickets`;
-            const res = await fetch(url);
-            const data = await res.json();
-            const normalized = (data || []).map((t: any) => ({
-                id: String(t.id),
-                branchId: String(t.branch_id),
-                sequenceNumber: t.sequence_number,
-                fullCode: t.full_code,
-                type: t.type,
-                clientName: t.client_name,
-                clientId: t.client_id ? String(t.client_id) : null,
-                status: t.status,
-                barberId: t.barber_id ? String(t.barber_id) : null,
-                chair: t.chair,
-                createdAt: t.created_at
-            }));
-            setTickets(normalized);
-        } catch (e) { console.error(e); }
-    };
-
+    const fetchTickets = async (branchId?: string) => { await fetchTicketsFromCtx(branchId); };
     const createTicket = async (type: TicketType, clientName: string, clientId?: string) => {
         if (!currentUser) return null;
-        const branchId = currentUser.branchId || branches[0].id;
-
-        // Calcular secuencia localmente para velocidad (el server validará)
-        const branchTickets = tickets.filter(t => t.branchId === branchId);
-        const sequenceNumber = branchTickets.length > 0 ? Math.max(...branchTickets.map(t => t.sequenceNumber)) + 1 : 1;
-
-        const newTicket: Ticket = {
-            id: Math.random().toString(36).substring(2, 15),
-            branchId,
-            sequenceNumber,
-            fullCode: `${type}-${sequenceNumber.toString().padStart(3, '0')}`,
-            type,
-            clientName,
-            clientId,
-            status: 'waiting',
-            createdAt: nowES()
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/tickets`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newTicket)
-            });
-            if (res.ok) {
-                setTickets(prev => [...prev, newTicket]);
-                return newTicket;
-            }
-        } catch (e) { console.error(e); }
-        return null;
+        return await createTicketFromCtx(type, clientName, clientId, currentUser.branchId || branches[0]?.id);
     };
-
     const updateTicketStatus = async (ticketId: string, status: Ticket['status'], barberId?: string, chair?: string) => {
-        try {
-            await fetch(`${API_URL}/tickets/${ticketId}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, barberId, chair })
-            });
-            setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status, barberId, chair } : t));
-        } catch (e) { console.error(e); }
+        await updateTicketStatusFromCtx(ticketId, status, barberId, chair);
     };
 
     const processSale = async (sale: Sale) => {
