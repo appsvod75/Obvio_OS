@@ -9,6 +9,7 @@ import { useAgenda } from './AgendaContext';
 import { useStaff } from './StaffContext';
 import { useBranch } from './BranchContext';
 import { useConfigCtx } from './ConfigContext';
+import { useInventory } from './InventoryContext';
 
 import { nowES } from '../utils/dates';
 
@@ -92,7 +93,14 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         addItem: addItemFromCtx, updateItem: updateItemFromCtx, removeItem: removeItemFromCtx,
         addCategory: addCategoryFromCtx, updateCategory: updateCategoryFromCtx, removeCategory: removeCategoryFromCtx
     } = useCatalog();
-    const [stocks, setStocks] = useState<BranchStock[]>([]);
+    const {
+        stocks, setStocks, inventoryMovements, setInventoryMovements,
+        providers, movementReasons,
+        getBranchStock: getBranchStockFromCtx,
+        registerInventoryMovement: registerInventoryMovementFromCtx,
+        transferStock: transferStockFromCtx, confirmTransferIn: confirmTransferInFromCtx,
+        addProvider: addProviderFromCtx, addMovementReason: addMovementReasonFromCtx
+    } = useInventory();
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [sales, setSales] = useState<Sale[]>([]);
     const { config, setConfig, normalizeConfig, updateConfig: updateConfigFromCtx, updateLocalPlaylist: updateLocalPlaylistFromCtx } = useConfigCtx();
@@ -101,12 +109,9 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
         return saved ? JSON.parse(saved) : null;
     });
     const [lastActivity, setLastActivity] = useState<number>(Date.now());
-    const [inventoryMovements, setInventoryMovements] = useState<InventoryMovement[]>([]);
     const [cashSession, setCashSession] = useState<CashSession | null>(null);
     const [cashClosures, setCashClosures] = useState<CashClosure[]>([]);
     const [videoLogs, setVideoLogs] = useState<VideoLog[]>([]);
-    const [providers, setProviders] = useState<string[]>(['Proveedor Local']);
-    const [movementReasons, setMovementReasons] = useState<string[]>(['Compra', 'Ajuste', 'Merma', 'Uso Interno']);
     const { appointments, setAppointments, addAppointment: addAppointmentFromCtx, updateAppointment: updateAppointmentFromCtx, deleteAppointment: deleteAppointmentFromCtx } = useAgenda();
     const { promotions, setPromotions, addPromotion: addPromotionFromCtx, updatePromotion: updatePromotionFromCtx, removePromotion: removePromotionFromCtx } = usePromotions();
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -762,94 +767,16 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const addCategory = async (name: string) => { await addCategoryFromCtx(name); };
     const updateCategory = async (oldName: string, newName: string): Promise<boolean> => { return await updateCategoryFromCtx(oldName, newName); };
     const removeCategory = async (name: string) => { await removeCategoryFromCtx(name); };
-    const getBranchStock = (branchId: string, itemId: string) => stocks.find(s => s.branchId === branchId && s.itemId === itemId);
+    const getBranchStock = getBranchStockFromCtx;
     const registerInventoryMovement = async (branchId: string, itemId: string, type: InventoryMovementType, quantity: number, unitCost: number = 0, reason: string = '', status: 'pending' | 'completed' = 'completed') => {
-        try {
-            const payload = {
-                id: crypto.randomUUID(),
-                branchId,
-                itemId,
-                type,
-                quantity,
-                unitCost,
-                reason,
-                status,
-                relatedBranchId: null
-            };
-            const res = await fetch(`${API_URL}/inventory-movements`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                // Actualización optimista local
-                const newMovement: InventoryMovement = {
-                    ...payload,
-                    date: nowES(),
-                    itemName: catalog.find(i => i.id === itemId)?.name || 'Item',
-                    previousStock: 0, // Estimado
-                    newStock: quantity // Estimado
-                };
-                setInventoryMovements(prev => [newMovement, ...prev]);
-
-                // Actualizar stock local
-                setStocks(prev => {
-                    const existingRequest = prev.find(s => s.branchId === branchId && s.itemId === itemId);
-                    if (existingRequest) {
-                        return prev.map(s => s.branchId === branchId && s.itemId === itemId ? { ...s, stock: s.stock + (['sale', 'adjustment_out', 'transfer_out'].includes(type) ? -quantity : quantity) } : s);
-                    } else {
-                        return [...prev, { id: crypto.randomUUID(), branchId, itemId, stock: quantity, averageCost: unitCost }];
-                    }
-                });
-                return true;
-            } else {
-                console.error("Error backend inv:", res.status, res.statusText);
-                try {
-                    const errData = await res.json();
-                    showToast('error', 'Error Servidor', errData.error || res.statusText);
-                } catch (jsonErr) {
-                    showToast('error', 'Error Servidor', `${res.status} ${res.statusText}`);
-                }
-                return false;
-            }
-        } catch (e) {
-            console.error(e);
-            showToast('error', 'Error Conexión', String(e));
-            return false;
-        }
+        const ok = await registerInventoryMovementFromCtx(branchId, itemId, type, quantity, unitCost, reason, status);
+        if (!ok) showToast('error', 'Error Servidor', 'No se pudo registrar el movimiento de inventario.');
+        return ok;
     };
-
-    const transferStock = async (fromBranch: string, toBranch: string, itemId: string, quantity: number, reason: string) => {
-        try {
-            const payload = {
-                id: crypto.randomUUID(),
-                branchId: fromBranch,
-                itemId,
-                type: 'transfer_out',
-                quantity,
-                unitCost: getBranchStock(fromBranch, itemId)?.averageCost || 0,
-                reason,
-                relatedBranchId: toBranch,
-                status: 'pending'
-            };
-            const res = await fetch(`${API_URL}/inventory-movements`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                // Actualizar stock local (salida)
-                setStocks(prev => prev.map(s => s.branchId === fromBranch && s.itemId === itemId ? { ...s, stock: s.stock - quantity } : s));
-            }
-        } catch (e) { console.error(e); }
-    };
-
-    const confirmTransferIn = async (movementId: string) => {
-        // Lógica simplificada: en server real debería haber endpoint específico o manejo automático
-        console.log("Confirmación de traslado pendiente de implementación completa en backend");
-    };
-    const addProvider = (name: string) => { if (!providers.includes(name)) setProviders(prev => [...prev, name]); };
-    const addMovementReason = (reason: string) => { if (!movementReasons.includes(reason)) setMovementReasons(prev => [...prev, reason]); };
+    const transferStock = async (fromBranch: string, toBranch: string, itemId: string, quantity: number, reason: string) => { await transferStockFromCtx(fromBranch, toBranch, itemId, quantity, reason); };
+    const confirmTransferIn = async (movementId: string) => { confirmTransferInFromCtx(movementId); };
+    const addProvider = (name: string) => { addProviderFromCtx(name); };
+    const addMovementReason = (reason: string) => { addMovementReasonFromCtx(reason); };
     const updateLocalPlaylist = (playlist: VideoItem[]) => updateLocalPlaylistFromCtx(playlist);
     const logVideoActivity = () => { };
     const closeCashSession = async (summary: Omit<CashClosure, 'id' | 'closedAt'>) => {
