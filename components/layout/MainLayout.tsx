@@ -4,6 +4,7 @@ import { useAuthStore } from '../../hooks/useAuthStore';
 import { useConfigStore } from '../../hooks/useConfigStore';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useBranchStore } from '../../hooks/useBranchStore';
+import { AppointmentReminder } from '../AppointmentReminder';
 import {
   LogOut, Scissors, Store, Package, Settings,
   DollarSign, LayoutGrid, Calendar, Users, Tag,
@@ -159,6 +160,7 @@ export function MainLayout() {
 
   return (
     <div className="min-h-screen flex bg-rose-bg text-rose-900">
+      <AppointmentReminder />
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-rose-palo-dark/20 z-40"
