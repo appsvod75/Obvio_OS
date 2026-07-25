@@ -428,7 +428,7 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
                                         <div key={video.id} onClick={() => setPreviewVideo(video)}
                                             className={`group relative bg-white border rounded-xl sm:rounded-2xl p-2 sm:p-3 flex items-center gap-3 sm:gap-4 cursor-pointer transition-all hover:border-orange-600/50 ${previewVideo?.id === video.id ? 'border-orange-600 bg-orange-600/5 shadow-[0_0_20px_rgba(234,88,12,0.1)]' : 'border-rose-border'}`}>
                                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-rose-muted border border-rose-border flex items-center justify-center shadow-lg overflow-hidden shrink-0">
-                                                {video.type === 'youtube' ? <Youtube className="text-destructive" size={14} className="sm:size-[18px]" /> : <FileVideo className="text-blue-500" size={14} className="sm:size-[18px]" />}
+                                                {video.type === 'youtube' ? <Youtube className="text-destructive sm:size-[18px]" size={14} /> : <FileVideo className="text-blue-500 sm:size-[18px]" size={14} />}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h5 className="text-[9px] sm:text-[10px] font-black text-rose-900 uppercase truncate">{video.name}</h5>
