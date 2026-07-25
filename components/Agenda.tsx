@@ -20,6 +20,12 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
     const { createTicket } = useTickets();
     const { clients } = useClients();
     const { categories } = useCatalog();
+    const { catalog } = useCatalog();
+    const serviceChips = useMemo(() => {
+        const cats = new Set<string>();
+        catalog.forEach(item => { if (item.active !== false && item.category) cats.add(item.category); });
+        return Array.from(cats).sort();
+    }, [catalog]);
     const { currentUser, showToast } = useBarber();
 
     const today = new Date();
@@ -84,9 +90,9 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
     };
 
     const openCreate = () => {
-        const firstCat = categories.filter(c => c.name !== 'General')[0];
+        const firstCat = serviceChips[0];
         setEditingId(null); setFormDate(selectedDate); setFormTime('10:00');
-        setFormClient(''); setFormClientId(undefined); setFormPhone(''); setFormBarber(''); setFormService(firstCat?.name || 'Servicio'); setFormNotes('');
+        setFormClient(''); setFormClientId(undefined); setFormPhone(''); setFormBarber(''); setFormService(firstCat || 'Servicio'); setFormNotes('');
         setClientSuggestions([]); setShowModal(true);
     };
 
@@ -237,9 +243,9 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Servicio</label>
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                    {categories.filter(c => c.name !== 'General').map(c => (
-                                        <button key={c.id || c.name} type="button" onClick={() => setFormService(c.name)}
-                                            className={`px-[clamp(8px,2vmin,14px)] py-[clamp(4px,1vmin,8px)] rounded-lg text-[clamp(10px,2.5vmin,12px)] font-bold border transition-all ${formService === c.name ? 'bg-rose-palo text-white border-rose-palo' : 'bg-rose-bg text-rose-700 border-rose-border hover:border-rose-palo'}`}>{c.name}</button>
+                                    {serviceChips.map(cat => (
+                                        <button key={cat} type="button" onClick={() => setFormService(cat)}
+                                            className={`px-[clamp(8px,2vmin,14px)] py-[clamp(4px,1vmin,8px)] rounded-lg text-[clamp(10px,2.5vmin,12px)] font-bold border transition-all ${formService === cat ? 'bg-rose-palo text-white border-rose-palo' : 'bg-rose-bg text-rose-700 border-rose-border hover:border-rose-palo'}`}>{cat}</button>
                                     ))}
                                 </div>
                             </div>
