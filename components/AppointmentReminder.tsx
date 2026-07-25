@@ -9,7 +9,12 @@ export const AppointmentReminder = () => {
   const { appointments } = useAgenda();
   const [alertAppt, setAlertAppt] = useState<Appointment | null>(null);
   const [snoozedUntil, setSnoozedUntil] = useState<Record<string, number>>({});
-  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
+  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('appointment_confirmed');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
   const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
 
   const sendTelegramReminder = useCallback(async (appt: Appointment) => {
@@ -64,7 +69,11 @@ export const AppointmentReminder = () => {
 
   const handleConfirm = () => {
     if (!alertAppt) return;
-    setConfirmedIds(prev => new Set(prev).add(alertAppt.id));
+    setConfirmedIds(prev => {
+      const next = new Set(prev).add(alertAppt.id);
+      localStorage.setItem('appointment_confirmed', JSON.stringify([...next]));
+      return next;
+    });
     setAlertAppt(null);
   };
 
