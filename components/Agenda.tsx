@@ -171,7 +171,7 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             const isCompleted = appt.status === 'completed';
                             const pendingApps = (appointmentsByDate[selectedDate] || []).filter(a => a.status === 'pending').length;
                             return (
-                                <div key={appt.id} className={`flex items-center gap-[clamp(8px,2vmin,16px)] p-[clamp(8px,2vmin,16px)] rounded-xl sm:rounded-2xl border transition-all ${isCompleted ? 'bg-rose-muted/30 border-rose-border/50 opacity-60' : 'bg-rose-bg/30 border-rose-border hover:border-rose-palo-light cursor-pointer'}`} onClick={() => !isCompleted && openEdit(appt)}>
+                                <div key={appt.id} className={`flex items-center gap-[clamp(6px,1.5vmin,12px)] p-[clamp(8px,2vmin,16px)] rounded-xl sm:rounded-2xl border transition-all ${isCompleted ? 'bg-rose-muted/30 border-rose-border/50 opacity-60' : 'bg-rose-bg/30 border-rose-border hover:border-rose-palo-light cursor-pointer'}`} onClick={() => !isCompleted && openEdit(appt)}>
                                     <div className="flex flex-col items-center min-w-[50px] sm:min-w-[60px]">
                                         <Clock size={12} className="text-rose-palo mb-0.5 sm:mb-1" />
                                         <span className="text-[clamp(12px,3vmin,16px)] font-black text-rose-900">{appt.time.slice(0, 5)}</span>
@@ -209,11 +209,11 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <h3 className="text-[clamp(16px,4vmin,20px)] font-black text-rose-900 uppercase tracking-tight">{editingId ? 'Editar Cita' : 'Nueva Cita'}</h3>
                             <button onClick={() => setShowModal(false)} className="p-1.5 sm:p-2 rounded-xl hover:bg-rose-muted text-rose-400"><X size={18} className="sm:size-[20px]" /></button>
                         </div>
-                        <form onSubmit={handleSave} className="space-y-[clamp(8px,2vmin,16px)]">
+                        <form onSubmit={handleSave} className="space-y-[clamp(6px,1.5vmin,12px)]">
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Cliente</label>
                                 <input required value={formClient} onChange={e => { setFormClient(e.target.value); setFormClientId(undefined); setClientSuggestions(clients.filter(c => c.name.toLowerCase().includes(e.target.value.toLowerCase())).slice(0, 5)); }}
-                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Nombre del cliente" />
+                                    className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Nombre del cliente" />
                                 {clientSuggestions.length > 0 && !formClientId && (
                                     <div className="mt-1 rounded-xl border border-rose-border divide-y divide-rose-border overflow-hidden">
                                         {clientSuggestions.map(c => (
@@ -226,18 +226,18 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Teléfono</label>
                                 <input value={formPhone} onChange={e => setFormPhone(e.target.value)}
-                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Opcional" />
+                                    className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" placeholder="Opcional" />
                             </div>
-                            <div className="grid grid-cols-2 gap-[clamp(8px,2vmin,16px)]">
+                            <div className="grid grid-cols-2 gap-[clamp(6px,1.5vmin,12px)]">
                                 <div>
                                     <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Fecha</label>
                                     <input type="date" required value={formDate} onChange={e => setFormDate(e.target.value)}
-                                        className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" />
+                                        className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" />
                                 </div>
                                 <div>
                                     <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Hora</label>
                                     <input type="time" required value={formTime} onChange={e => setFormTime(e.target.value)}
-                                        className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" />
+                                        className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors" />
                                 </div>
                             </div>
                             <div>
@@ -252,7 +252,7 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Estilista</label>
                                 <select value={formBarber} onChange={e => setFormBarber(e.target.value)}
-                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors">
+                                    className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors">
                                     <option value="">Cualquiera</option>
                                     {barbers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                 </select>
@@ -260,9 +260,9 @@ export const Agenda = ({ navigateView }: { navigateView?: (v: string) => void })
                             <div>
                                 <label className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1 sm:mb-1.5 block">Notas</label>
                                 <textarea value={formNotes} onChange={e => setFormNotes(e.target.value)} rows={2}
-                                    className="w-full p-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors resize-none" />
+                                    className="w-full p-[clamp(6px,1.5vmin,10px)] rounded-xl bg-rose-bg border border-rose-border text-[clamp(12px,3vmin,14px)] font-bold outline-none focus:border-rose-palo transition-colors resize-none" />
                             </div>
-                            <div className="flex gap-[clamp(8px,2vmin,16px)] pt-[clamp(4px,1vmin,8px)]">
+                            <div className="flex gap-[clamp(6px,1.5vmin,12px)] pt-[clamp(4px,1vmin,8px)]">
                                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-muted text-rose-700 text-[clamp(11px,2.5vmin,13px)] font-black uppercase transition-colors">Cancelar</button>
                                 <button type="submit" className="flex-1 py-[clamp(8px,2vmin,12px)] rounded-xl bg-rose-palo text-white text-[clamp(11px,2.5vmin,13px)] font-black uppercase shadow-lg hover:bg-rose-palo-dark active:scale-95 transition-all">Guardar</button>
                             </div>
