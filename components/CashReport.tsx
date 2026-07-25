@@ -246,17 +246,22 @@ export const CashReport = ({ navigateView }: CashReportProps) => {
                             </div>
 
                             {/* Right column */}
-                            <div className="sm:col-span-12 lg:col-span-3 flex flex-col gap-[clamp(6px,1.5vmin,12px)]">
-                                <div className="bg-white border border-rose-border rounded-[clamp(12px,3vmin,40px)] p-[clamp(8px,2vmin,16px)] shadow-xl">
-                                    <h3 className="text-rose-500 font-black text-[clamp(9px,2vmin,10px)] uppercase mb-[clamp(6px,1.5vmin,12px)]">Acciones</h3>
-                                    <div className="grid grid-cols-2 gap-[clamp(6px,1.5vmin,12px)]">
-                                        <button onClick={() => setShowReportModal(true)} className="bg-rose-palo hover:bg-rose-palo-dark text-white py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1"><Receipt size={14} /> Ticket</button>
-                                        <button onClick={() => printReceipt('printable-report-z')} className="bg-rose-muted text-rose-500 py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-1"><Printer size={14} /> Imprimir</button>
-                                        <button className="bg-rose-muted text-rose-500 py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl flex items-center justify-center gap-1 opacity-40 cursor-not-allowed"><Mail size={14} /> Correo</button>
+                            <div className="sm:col-span-12 lg:col-span-3 flex flex-row gap-[clamp(6px,1.5vmin,24px)] items-stretch h-full">
+                                <div className="bg-white border border-rose-border rounded-[clamp(12px,3vmin,40px)] p-[clamp(8px,2vmin,16px)] shadow-xl flex flex-col gap-[clamp(4px,1vmin,8px)] flex-1">
+                                    <h3 className="text-rose-500 font-black text-[clamp(9px,2vmin,10px)] uppercase shrink-0">Acciones</h3>
+                                    <div className="flex flex-col gap-[clamp(6px,1.5vmin,12px)] flex-1 justify-center">
+                                        <button onClick={() => setShowReportModal(true)} className="w-full bg-rose-palo hover:bg-rose-palo-dark text-white py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1"><Receipt size={14} /> Ticket</button>
+                                        <button onClick={() => printReceipt('printable-report-z')} className="w-full bg-rose-muted text-rose-500 py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-1"><Printer size={14} /> Imprimir</button>
+                                    </div>
+                                </div>
+                                <div className="bg-white border border-rose-border rounded-[clamp(12px,3vmin,40px)] p-[clamp(8px,2vmin,16px)] shadow-xl flex flex-col gap-[clamp(4px,1vmin,8px)] flex-1">
+                                    <h3 className="text-rose-500 font-black text-[clamp(9px,2vmin,10px)] uppercase shrink-0">Cierre</h3>
+                                    <div className="flex flex-col gap-[clamp(6px,1.5vmin,12px)] flex-1 justify-center">
+                                        <button className="w-full bg-rose-muted text-rose-500 py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl flex items-center justify-center gap-1 opacity-40 cursor-not-allowed"><Mail size={14} /> Correo</button>
                                         {!viewingClosureId ? (
-                                            <button onClick={() => setShowConfirmModal(true)} className="bg-destructive text-white py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl flex items-center justify-center gap-1 border-b-4 border-destructive active:border-b-0 active:translate-y-1 transition-all"><Power size={14} /> Cerrar Caja</button>
+                                            <button onClick={() => setShowConfirmModal(true)} className="w-full bg-destructive text-white py-[clamp(11px,2.8vmin,16px)] rounded-xl font-black uppercase text-[clamp(9px,2.2vmin,11px)] shadow-xl flex items-center justify-center gap-1 border-b-4 border-destructive active:border-b-0 active:translate-y-1 transition-all"><Power size={14} /> Cerrar Caja</button>
                                         ) : (
-                                            <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl flex items-center justify-center py-[clamp(20px,5vmin,32px)] text-[clamp(12px,3vmin,14px)] font-black text-blue-400 uppercase">Archivado</div>
+                                            <div className="w-full bg-blue-900/10 border border-blue-500/20 rounded-xl flex items-center justify-center py-[clamp(20px,5vmin,32px)] text-[clamp(12px,3vmin,14px)] font-black text-blue-400 uppercase">Archivado</div>
                                         )}
                                     </div>
                                 </div>
