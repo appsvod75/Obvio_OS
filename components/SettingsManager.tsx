@@ -359,14 +359,6 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
                                         </button>
                                     </div>
                                 </div>
-                                <div className="space-y-3 sm:space-y-4">
-                                    <label className="text-[7px] sm:text-[8px] font-black text-rose-500 uppercase tracking-widest ml-1">Configuración de Cierre</label>
-                                    <div className="p-3 sm:p-4 bg-white/50 border border-rose-border rounded-xl">
-                                        <p className="text-[8px] sm:text-[9px] text-rose-500 font-bold uppercase tracking-widest leading-relaxed">
-                                            Cierre Automático se gestiona en <span className="text-cyan-500">Sucursales</span>
-                                        </p>
-                                    </div>
-                                </div>
                                 <div className="space-y-2">
                                     <label className="text-[7px] sm:text-[8px] font-black text-emerald-500 uppercase tracking-widest ml-1 flex items-center gap-1.5"><Zap size={8} className="sm:size-[10px]" /> Webhook GAS Global</label>
                                     <input value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} className="w-full bg-rose-bg border border-rose-border rounded-xl py-2 sm:py-2.5 px-3 sm:px-4 text-rose-900 font-mono text-[8px] sm:text-[9px] outline-none focus:border-emerald-500 transition-all shadow-inner" placeholder="https://script.google.com/..." />
