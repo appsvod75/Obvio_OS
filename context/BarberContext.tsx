@@ -4,6 +4,7 @@ import { User, Client, CatalogItem, Ticket, Sale, AppConfig, Role, TicketType, I
 import { ToastContainer, ToastMessage, ToastType } from '../components/Toast';
 import { useClients } from './ClientsContext';
 import { useCatalog } from './CatalogContext';
+import { usePromotions } from './PromotionsContext';
 
 import { nowES } from '../utils/dates';
 
@@ -104,7 +105,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     const [providers, setProviders] = useState<string[]>(['Proveedor Local']);
     const [movementReasons, setMovementReasons] = useState<string[]>(['Compra', 'Ajuste', 'Merma', 'Uso Interno']);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [promotions, setPromotions] = useState<Promotion[]>([]);
+    const { promotions, setPromotions, addPromotion: addPromotionFromCtx, updatePromotion: updatePromotionFromCtx, removePromotion: removePromotionFromCtx } = usePromotions();
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isInstallable, setIsInstallable] = useState(false);
 
@@ -1061,33 +1062,16 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
     };
 
     const addPromotion = async (promo: Promotion) => {
-        try {
-            await fetch(`${API_URL}/promotions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(promo)
-            });
-            setPromotions(prev => [...prev, promo]);
-            showToast('success', 'Promoción Guardada', `La promoción ${promo.name} ha sido registrada.`);
-        } catch (e) { console.error(e); }
+        const ok = await addPromotionFromCtx(promo);
+        if (ok) showToast('success', 'Promoción Guardada', `La promoción ${promo.name} ha sido registrada.`);
     };
     const updatePromotion = async (promo: Promotion) => {
-        try {
-            await fetch(`${API_URL}/promotions/${promo.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(promo)
-            });
-            setPromotions(prev => prev.map(p => p.id === promo.id ? promo : p));
-            showToast('success', 'Promoción Actualizada', `La promoción ${promo.name} ha sido actualizada.`);
-        } catch (e) { console.error(e); }
+        const ok = await updatePromotionFromCtx(promo);
+        if (ok) showToast('success', 'Promoción Actualizada', `La promoción ${promo.name} ha sido actualizada.`);
     };
     const removePromotion = async (id: string) => {
-        try {
-            await fetch(`${API_URL}/promotions/${id}`, { method: 'DELETE' });
-            setPromotions(prev => prev.filter(p => p.id !== id));
-            showToast('warning', 'Promoción Eliminada', 'La promoción ha sido removida del sistema.');
-        } catch (e) { console.error(e); }
+        const ok = await removePromotionFromCtx(id);
+        if (ok) showToast('warning', 'Promoción Eliminada', 'La promoción ha sido removida del sistema.');
     };
 
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
