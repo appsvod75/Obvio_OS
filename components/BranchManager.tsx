@@ -83,7 +83,6 @@ export const BranchManager = () => {
         }
 
         if (success) {
-            showNotify('success', editingBranchId ? 'Sucursal actualizada' : 'Sucursal creada');
             resetBranchForm();
         } else {
             showNotify('error', 'Error al sincronizar con el VPS');
@@ -121,7 +120,6 @@ export const BranchManager = () => {
             productGoalPercent: parseFloat(planProdPct)
         };
         upsertMonthlyPlan(payload);
-        showNotify('success', 'Plan mensual guardado');
         setPlanGoal('');
         setPlanDays('');
         setPlanBranchId('');
