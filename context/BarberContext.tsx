@@ -213,7 +213,8 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                     id: String(u.id), name: u.name, username: u.username, role: u.role, pin: u.pin,
                     active: u.active === 1 || u.active === true,
                     branchId: u.branch_id ? String(u.branch_id) : null,
-                    canDoPos: u.can_do_pos === 1 || u.can_do_pos === true
+                    canDoPos: u.can_do_pos === 1 || u.can_do_pos === true,
+                    telegramId: u.telegram_id || u.telegramId || undefined
                 }));
 
                 const normalizedClients = (data.clients || []).map((c: any) => ({

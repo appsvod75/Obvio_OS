@@ -38,6 +38,7 @@ export interface User {
   active?: boolean;
   branchId?: string;
   canDoPos?: boolean;
+  telegramId?: string;
   permissionsOverrides?: PermissionOverride;
 }
 

@@ -76,6 +76,7 @@ function initSchema() {
       active INTEGER DEFAULT 1,
       branch_id TEXT,
       can_do_pos INTEGER DEFAULT 0,
+      telegram_id TEXT,
       permissions_overrides TEXT,
       FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
     );

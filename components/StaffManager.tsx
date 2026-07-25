@@ -25,6 +25,7 @@ export const StaffManager = () => {
     const [branchId, setBranchId] = useState(isBranchAdmin ? (currentUser?.branchId || '') : '');
     const [active, setActive] = useState(true);
     const [canDoPos, setCanDoPos] = useState(false);
+    const [telegramId, setTelegramId] = useState('');
     const [listSearch, setListSearch] = useState('');
     const [notify, setNotify] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
@@ -35,13 +36,13 @@ export const StaffManager = () => {
 
     const resetForm = () => {
         setEditingUserId(null); setName(''); setUsername(''); setRole('estilista');
-        setPin(''); setBranchId(isBranchAdmin ? (currentUser?.branchId || '') : ''); setActive(true); setCanDoPos(false);
+        setPin(''); setBranchId(isBranchAdmin ? (currentUser?.branchId || '') : ''); setActive(true); setCanDoPos(false); setTelegramId('');
     };
 
     const handleEdit = (user: User) => {
         if (user.id === 'u_admin' && currentUser?.id !== 'u_admin') { showNotify('error', 'Sin permisos'); return; }
         setEditingUserId(user.id); setName(user.name); setUsername(user.username || '');
-        setRole(user.role); setPin(user.pin); setBranchId(user.branchId || ''); setActive(user.active !== false); setCanDoPos(!!user.canDoPos);
+        setRole(user.role); setPin(user.pin); setBranchId(user.branchId || ''); setActive(user.active !== false); setCanDoPos(!!user.canDoPos); setTelegramId(user.telegramId || '');
     };
 
     const handleDelete = (user: User) => {
@@ -51,7 +52,7 @@ export const StaffManager = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        const payload: User = { id: editingUserId || crypto.randomUUID(), name, username, role, pin, branchId: branchId || undefined, active, canDoPos };
+        const payload: User = { id: editingUserId || crypto.randomUUID(), name, username, role, pin, branchId: branchId || undefined, active, canDoPos, telegramId: telegramId || undefined };
         if (editingUserId) { updateUser(payload); showNotify('success', 'Actualizado'); }
         else { await addUser(payload); showNotify('success', 'Registrado'); }
         resetForm();
@@ -121,6 +122,9 @@ export const StaffManager = () => {
                                 <option value="admin">ADMIN</option>
                                 <option value="display">TV</option>
                             </select></div>
+
+                        <div><label className="text-[9px] sm:text-[10px] font-black text-rose-400 uppercase block mb-1 sm:mb-2 ml-1 tracking-[0.2em]"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline mr-1 -mt-0.5"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg> Telegram</label>
+                            <input value={telegramId} onChange={e => setTelegramId(e.target.value)} className="w-full bg-white border border-rose-border rounded-xl p-[clamp(8px,2vmin,14px)] text-rose-900 font-bold text-[clamp(11px,2.5vmin,13px)] outline-none focus:border-yellow-600 shadow-inner transition-all" placeholder="@username o ID numérico" /></div>
 
                         <div><label className="text-[9px] sm:text-[10px] font-black text-rose-400 uppercase block mb-1 sm:mb-2 ml-1 tracking-[0.2em]">Sede</label>
                             {isSuperAdmin ? (

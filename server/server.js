@@ -337,7 +337,7 @@ app.put('/api/clients/:id', (req, res) => {
 app.post('/api/users', (req, res) => {
   const u = req.body;
   try {
-    db().prepare("INSERT INTO users (id, name, username, role, pin, branch_id, can_do_pos, active) VALUES (?,?,?,?,?,?,?,?)").run(u.id, u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, 1);
+    db().prepare("INSERT INTO users (id, name, username, role, pin, branch_id, can_do_pos, telegram_id, active) VALUES (?,?,?,?,?,?,?,?,?)").run(u.id, u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, u.telegramId || null, 1);
     io.emit('sync_needed', { reason: 'users' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -347,7 +347,7 @@ app.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
   const u = req.body;
   try {
-    db().prepare("UPDATE users SET name=?, username=?, role=?, pin=?, branch_id=?, can_do_pos=?, active=? WHERE id=?").run(u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, u.active ? 1 : 0, id);
+    db().prepare("UPDATE users SET name=?, username=?, role=?, pin=?, branch_id=?, can_do_pos=?, telegram_id=?, active=? WHERE id=?").run(u.name, u.username, u.role, u.pin, u.branchId, u.canDoPos ? 1 : 0, u.telegramId || null, u.active ? 1 : 0, id);
     io.emit('sync_needed', { reason: 'users' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
