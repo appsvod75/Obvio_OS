@@ -1,11 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { useBarber } from '../context/BarberContext';
+import { useSales } from '../context/SalesContext';
+import { useAgenda } from '../context/AgendaContext';
 import { formatMonthYearES, formatWeekdayES, formatDateES, todayES, isSameDayES, formatTimeES } from '../utils/dates';
 import { Calendar as CalendarIcon, DollarSign, Scissors, Clock, Search, LogOut, CheckCircle, User, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 
 export const BarberDashboard = () => {
-    const { currentUser, sales, logout, appointments } = useBarber();
+    const { currentUser, logout } = useBarber();
+    const { sales } = useSales();
+    const { appointments } = useAgenda();
 
     // --- STATE FOR CALENDAR & AGENDA ---
     const [selectedDate, setSelectedDate] = useState(() => {
