@@ -164,6 +164,48 @@
 .marquee-container { overflow: hidden; white-space: nowrap; }
 .marquee-content { display: flex; animation: marquee linear infinite; width: max-content; }
 
+@keyframes fly-item {
+  0% { opacity: 1; transform: scale(1) rotate(0deg); }
+  60% { opacity: 0.8; transform: scale(0.4) rotate(180deg); }
+  100% { opacity: 0; transform: scale(0.1) rotate(360deg); }
+}
+.animate-fly-item { animation: fly-item 0.7s ease-in forwards; }
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wave {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-8deg); }
+  45% { transform: rotate(14deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #fb7185 0%,
+    #fda4af 25%,
+    #fff 50%,
+    #fda4af 75%,
+    #fb7185 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2.5s linear infinite;
+}
+
 @media print {
   #root, .no-print { display: none !important; }
   .print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white !important; visibility: visible !important; }

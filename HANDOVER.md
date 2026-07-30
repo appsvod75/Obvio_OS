@@ -14,8 +14,8 @@ Sistema POS para barbería/salón con gestión de ventas, tickets (cola), agenda
 ```
 obvio_OS/
 ├── App.tsx                    # HashRouter > BarberProvider > AppRoutes
-├── index.tsx                  # Entry point con StrictMode
-├── index.css                  # Tailwind + variables rose-palo + animaciones
+├── index.tsx                  # Entry point con StrictMode + desregistro SW en localhost
+├── index.css                  # Tailwind + variables rose-palo + animaciones (fadeInUp, fly-item, wave 👋, shimmer)
 ├── types.ts                   # Todos los tipos: User, Sale, Ticket, Appointment, etc.
 ├── types/permissions.ts       # Sistema de permisos por rol
 ├── tailwind.config.js
@@ -53,13 +53,14 @@ obvio_OS/
 │   ├── PromotionManager.tsx    # CRUD de promociones
 │   ├── CashReport.tsx          # Corte de caja
 │   ├── ReportingDashboard.tsx  # Reportes gráficos (recharts)
-│   ├── Dashboard.tsx           # Panel admin con iconos visibles según hiddenPanels
 │   ├── layout/
+│   │   ├── DashboardHome.tsx   # Menú admin con grid responsive (2→3→5→5→6→8 cols), animación fadeInUp
 │   │   ├── MainLayout.tsx      # Sidebar + header + Outlet, responsive, sticky logo
-│   │   └── AppRoutes.tsx       # Router tree
+│   │   ├── AppRoutes.tsx       # Router tree + saludo de bienvenida (👋 shimmer, 1.5s al login)
+│   │   └── ViewWrapper.tsx     # Hook useNavigateView para pasar navegación a vistas hijas
 │   └── pos/
 │       ├── POSModals.tsx       # Modales: AddClient, Combo, OpenSession
-│       ├── ProductGrid.tsx     # Grid de productos con drag-scroll
+│       ├── ProductGrid.tsx     # Grid de productos agrupado por tipo (Servicios/Productos/Combos), orden alfabético, grid responsive por sección
 │       └── CardSidebar.tsx     # Carrito responsive con overlay
 ├── hooks/
 │   ├── usePOSStore.ts          # Store del POS (carrito, pagos, checkout)
@@ -107,7 +108,11 @@ obvio_OS/
 
 ### POS / Caja
 - Modos: Tickets (turnos) y Directo (walk-in)
-- Catálogo con búsqueda, categorías, drag-scroll
+- Catálogo agrupado por tipo (Servicios / Productos / Combos), ordenado alfabéticamente
+- Cada grupo tiene su propio grid para evitar estiramiento por imágenes de productos
+- Grid responsive: 2→3→5→5→6→8 columnas según viewport
+- Buscador, drag-scroll
+- Imagen de producto con aspect ratio 16:10
 - Carrito responsive: overlay en móvil, sidebar estático en desktop
 - Pagos divididos: efectivo, tarjeta, transferencia, bitcoin
 - Descuentos por promoción y puntos de lealtad
@@ -187,6 +192,31 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - Vista de Ventas completa con clamp (filtros, resumen, tabla, modal ticket)
 - Catálogo: DetailPanel y ComboSection con clamp reducido
 
+## Pantalla de Bienvenida
+- Aparece en `AppRoutes.tsx` al iniciar sesión o recargar la página
+- Dura **1.5 segundos**, no se repite al navegar entre vistas internas
+- Emoji 👋 con animación wave (CSS keyframes)
+- Texto "Bienvenid@," con efecto shimmer (barrido de luz gradiente animado)
+- Nombre del usuario en color rose-800
+- Se activa en cada login (cuando currentUser pasa de null a definido)
+
+## DashboardHome (Menú Principal)
+- Archivo: `components/layout/DashboardHome.tsx` (reemplazó al antiguo `components/Dashboard.tsx`)
+- Grid de botones responsive: `grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8`
+- Botones con altura mínima responsive: `min-h-[100px] sm:min-h-[125px] lg:min-h-[145px] xl:min-h-[165px]`
+- Iconos responsive: `w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 xl:w-9 xl:h-9`
+- Texto responsive: `text-sm sm:text-[15px] lg:text-base`
+- Sin max-width — ocupa todo el ancho disponible
+- Animación fadeInUp escalonada por índice de cada botón
+- Los módulos visibles se controlan desde Config → Paneles (hiddenPanels)
+
+## CatalogManager (Catálogo)
+- Tabla responsive: sin `min-w-[600px]`, usa `min-w-full` y se adapta al viewport
+- Padding y texto por breakpoint: `p-2 sm:p-3 lg:p-4`, `text-xs sm:text-[13px] lg:text-sm`
+- Columna Categoría oculta en móvil (`hidden sm:table-cell`)
+- Precios con tamaño fijo (`text-sm sm:text-base`) para evitar scroll horizontal
+- DetailPanel lateral en desktop, overlay en móvil
+
 ## Proyección de Ventas (Plan Mensual)
 - `ReportingDashboard` calcula proyección basada en **días reales con ventas**:
   ```typescript
@@ -214,6 +244,8 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - Inventario de insumos + recetas de servicios (bom list) — pendiente de implementar
 - El `sync_needed` actual hace sync completo de todos los datos — optimizable a eventos por entidad específica
 - Telegram: se necesita crear un bot en @BotFather y pegar el token en Config → Telegram Bot Token
+- `components/Dashboard.tsx` eliminado (no se usaba, reemplazado por `layout/DashboardHome.tsx`)
+- HANDOVER.md y WALKTHROUGH.md deben mantenerse actualizados como fuente de contexto para agentes/sesiones nuevas
 
 ## Cómo Correr (Desarrollo)
 ```bash

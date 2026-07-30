@@ -159,7 +159,7 @@ export function MainLayout() {
   );
 
   return (
-    <div className="min-h-screen flex bg-rose-bg text-rose-900">
+    <div className="h-[100dvh] w-screen flex bg-rose-bg text-rose-900 overflow-hidden">
       <AppointmentReminder />
       {sidebarOpen && (
         <div
@@ -177,7 +177,7 @@ export function MainLayout() {
         <SidebarContent />
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <header className="h-14 bg-white border-b border-rose-border flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
             {!isLocked && (
@@ -229,7 +229,7 @@ export function MainLayout() {
           </div>
         </header>
 
-        <main className="flex-1">
+        <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <Outlet />
         </main>
       </div>

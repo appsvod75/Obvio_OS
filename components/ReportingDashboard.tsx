@@ -319,7 +319,7 @@ export const ReportingDashboard = () => {
 
             {/* FOOTER */}
             <div className="px-8 py-2 border-t border-rose-border flex justify-between items-center shrink-0 bg-rose-muted">
-                <span className="text-[6px] text-rose-400 font-black uppercase tracking-[0.5em]">BarberOS BI Engine v3.3 • AI Forecasting & Monthly Planning Active</span>
+                <span className="text-[6px] text-rose-400 font-black uppercase tracking-[0.5em]">BI Engine v4.0 • Proyección y Plan Mensual</span>
                 <div className="flex gap-4">
                     <button className="flex items-center gap-1.5 text-rose-500 hover:text-rose-400 transition-all">
                         <Info size={10} />

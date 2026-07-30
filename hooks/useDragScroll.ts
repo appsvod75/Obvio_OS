@@ -3,68 +3,111 @@ import React, { useRef, useState, useCallback } from 'react';
 export const useDragScroll = () => {
     const ref = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [startY, setStartY] = useState(0);
-    const [startX, setStartX] = useState(0);
-    const [scrollTop, setScrollTop] = useState(0);
-    const [scrollLeft, setScrollLeft] = useState(0);
-
-    const getPos = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
-        if ('touches' in e) {
-            return { x: e.touches[0].pageX, y: e.touches[0].pageY };
-        }
-        return { x: (e as MouseEvent).pageX, y: (e as MouseEvent).pageY };
-    };
-
-    const startDrag = (pos: { x: number; y: number }) => {
-        if (!ref.current) return;
-        setIsDragging(true);
-        setStartY(pos.y - ref.current.offsetTop);
-        setStartX(pos.x - ref.current.offsetLeft);
-        setScrollTop(ref.current.scrollTop);
-        setScrollLeft(ref.current.scrollLeft);
-        ref.current.style.setProperty('cursor', 'grabbing', 'important');
-        ref.current.style.userSelect = 'none';
-    };
-
-    const stopDrag = () => {
-        if (!ref.current) return;
-        setIsDragging(false);
-        ref.current.style.setProperty('cursor', 'grab', 'important');
-        ref.current.style.removeProperty('user-select');
-    };
-
-    const moveDrag = (pos: { x: number; y: number }) => {
-        if (!isDragging || !ref.current) return;
-        const y = pos.y - ref.current.offsetTop;
-        const x = pos.x - ref.current.offsetLeft;
-        ref.current.scrollTop = scrollTop - (y - startY) * 1.5;
-        ref.current.scrollLeft = scrollLeft - (x - startX) * 1.5;
-    };
+    const dragStartRef = useRef({ x: 0, y: 0, scrollTop: 0, scrollLeft: 0, active: false, hasMoved: false });
 
     const onMouseDown = useCallback((e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON' || target.closest('button')) return;
-        startDrag({ x: e.pageX, y: e.pageY });
+        if (
+            target.tagName === 'INPUT' || 
+            target.tagName === 'TEXTAREA' || 
+            target.tagName === 'BUTTON' || 
+            target.closest('button') ||
+            target.closest('input, textarea, select, a')
+        ) return;
+
+        if (!ref.current) return;
+        dragStartRef.current = {
+            x: e.pageX,
+            y: e.pageY,
+            scrollTop: ref.current.scrollTop,
+            scrollLeft: ref.current.scrollLeft,
+            active: true,
+            hasMoved: false
+        };
+        ref.current.style.setProperty('cursor', 'grabbing', 'important');
+        ref.current.style.userSelect = 'none';
+    }, []);
+
+    const onMouseMove = useCallback((e: React.MouseEvent) => {
+        const drag = dragStartRef.current;
+        if (!drag.active || !ref.current) return;
+
+        const dx = e.pageX - drag.x;
+        const dy = e.pageY - drag.y;
+
+        // Umbral de 6px para diferenciar click de arrastre
+        if (!drag.hasMoved && Math.abs(dx) < 6 && Math.abs(dy) < 6) {
+            return;
+        }
+
+        if (!drag.hasMoved) {
+            drag.hasMoved = true;
+            setIsDragging(true);
+        }
+
+        e.preventDefault();
+        ref.current.scrollTop = drag.scrollTop - dy * 1.5;
+        ref.current.scrollLeft = drag.scrollLeft - dx * 1.5;
+    }, []);
+
+    const stopDrag = useCallback(() => {
+        const drag = dragStartRef.current;
+        if (!drag.active) return;
+
+        drag.active = false;
+        setIsDragging(false);
+
+        if (ref.current) {
+            ref.current.style.setProperty('cursor', 'grab', 'important');
+            ref.current.style.removeProperty('user-select');
+        }
     }, []);
 
     const onTouchStart = useCallback((e: React.TouchEvent) => {
         const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON' || target.closest('button')) return;
-        startDrag({ x: e.touches[0].pageX, y: e.touches[0].pageY });
+        if (
+            target.tagName === 'INPUT' || 
+            target.tagName === 'TEXTAREA' || 
+            target.tagName === 'BUTTON' || 
+            target.closest('button') ||
+            target.closest('input, textarea, select, a')
+        ) return;
+
+        if (!ref.current) return;
+        dragStartRef.current = {
+            x: e.touches[0].pageX,
+            y: e.touches[0].pageY,
+            scrollTop: ref.current.scrollTop,
+            scrollLeft: ref.current.scrollLeft,
+            active: true,
+            hasMoved: false
+        };
     }, []);
 
-    const onMouseLeave = useCallback(() => stopDrag(), []);
-    const onMouseUp = useCallback(() => stopDrag(), []);
-    const onTouchEnd = useCallback(() => stopDrag(), []);
-
-    const onMouseMove = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        moveDrag({ x: e.pageX, y: e.pageY });
-    }, [isDragging, startY, startX, scrollTop, scrollLeft]);
-
     const onTouchMove = useCallback((e: React.TouchEvent) => {
-        moveDrag({ x: e.touches[0].pageX, y: e.touches[0].pageY });
-    }, [isDragging, startY, startX, scrollTop, scrollLeft]);
+        const drag = dragStartRef.current;
+        if (!drag.active || !ref.current) return;
+
+        const dx = e.touches[0].pageX - drag.x;
+        const dy = e.touches[0].pageY - drag.y;
+
+        if (!drag.hasMoved && Math.abs(dx) < 6 && Math.abs(dy) < 6) {
+            return;
+        }
+
+        if (!drag.hasMoved) {
+            drag.hasMoved = true;
+            setIsDragging(true);
+        }
+
+        e.preventDefault();
+        ref.current.scrollTop = drag.scrollTop - dy * 1.5;
+        ref.current.scrollLeft = drag.scrollLeft - dx * 1.5;
+    }, []);
+
+    const onMouseLeave = useCallback(() => stopDrag(), [stopDrag]);
+    const onMouseUp = useCallback(() => stopDrag(), [stopDrag]);
+    const onTouchEnd = useCallback(() => stopDrag(), [stopDrag]);
 
     return {
         ref,

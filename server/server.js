@@ -47,7 +47,7 @@ app.get('/api/sync', (req, res) => {
     const users = db().prepare("SELECT * FROM users").all();
     const clients = db().prepare("SELECT * FROM clients").all();
     const catalog = db().prepare(`
-      SELECT c.*, cat.name as category 
+      SELECT c.id, c.name, c.type, c.price, c.category_id, c.active, c.cost, c.etiqueta, c.sugerido, c.image_url as imageUrl, c.sku, c.combo_definition, cat.name as category
       FROM catalog c 
       LEFT JOIN categories cat ON c.category_id = cat.id
     `).all();
@@ -379,7 +379,7 @@ app.post('/api/catalog', (req, res) => {
         catId = newId;
       }
     }
-    db().prepare("INSERT INTO catalog (id, name, type, price, category_id, active, combo_definition) VALUES (?,?,?,?,?,?,?)").run(i.id, i.name, i.type, i.price, catId, 1, JSON.stringify(i.comboDefinition));
+    db().prepare("INSERT INTO catalog (id, name, type, price, category_id, active, cost, etiqueta, sugerido, image_url, sku, combo_definition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").run(i.id, i.name, i.type, i.price, catId, 1, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition));
     io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -399,7 +399,7 @@ app.put('/api/catalog/:id', (req, res) => {
         catId = newId;
       }
     }
-    db().prepare("UPDATE catalog SET name=?, type=?, price=?, category_id=?, active=?, combo_definition=? WHERE id=?").run(i.name, i.type, i.price, catId, i.active ? 1 : 0, JSON.stringify(i.comboDefinition), id);
+    db().prepare("UPDATE catalog SET name=?, type=?, price=?, category_id=?, active=?, cost=?, etiqueta=?, sugerido=?, image_url=?, sku=?, combo_definition=? WHERE id=?").run(i.name, i.type, i.price, catId, i.active ? 1 : 0, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition), id);
     io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

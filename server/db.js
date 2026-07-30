@@ -146,6 +146,10 @@ function initSchema() {
       category_id TEXT,
       active INTEGER DEFAULT 1,
       cost REAL DEFAULT 0.00,
+      etiqueta REAL DEFAULT 0.00,
+      sugerido REAL DEFAULT 0.00,
+      image_url TEXT,
+      sku TEXT,
       combo_definition TEXT,
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
     );
@@ -297,6 +301,19 @@ function addMissingColumns() {
   }
   if (!cols.includes('telegram_bot_token')) {
     db.prepare("ALTER TABLE app_config ADD COLUMN telegram_bot_token TEXT").run();
+  }
+  const catalogCols = db.prepare("PRAGMA table_info(catalog)").all().map(function(c) { return c.name; });
+  if (!catalogCols.includes('etiqueta')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN etiqueta REAL DEFAULT 0.00").run();
+  }
+  if (!catalogCols.includes('sugerido')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN sugerido REAL DEFAULT 0.00").run();
+  }
+  if (!catalogCols.includes('image_url')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN image_url TEXT").run();
+  }
+  if (!catalogCols.includes('sku')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN sku TEXT").run();
   }
   db.prepare("PRAGMA wal_checkpoint(TRUNCATE)").run();
 }

@@ -73,7 +73,7 @@ export const CashReportContent: React.FC<CashReportContentProps> = ({ stats, con
                     AUDIT: {stats.openedBy ? stats.openedBy.split(' ')[0] : '---'}
                 </div>
                 <div className="text-[7px] opacity-40 uppercase tracking-tighter italic">
-                    Validado BarberOS v4.0
+                    {config.salonName || 'Validado'}
                 </div>
             </div>
         </div>

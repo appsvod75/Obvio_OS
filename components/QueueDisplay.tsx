@@ -188,7 +188,7 @@ export const QueueDisplay = ({ onClose }: QueueDisplayProps) => {
   const animationDuration = `${baseDuration / speed}s`;
 
   const rawMessages = (config.tickerMessage || '').split('\n').filter(m => m.trim() !== '');
-  const messages = rawMessages.length > 0 ? rawMessages : ['Bienvenidos a BarberOS', 'Espere su turno'];
+  const messages = rawMessages.length > 0 ? rawMessages : ['Bienvenidos', 'Espere su turno'];
   const fullText = messages.join('  •  ');
 
   // Format Time

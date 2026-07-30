@@ -129,42 +129,46 @@ export const CatalogManager = () => {
       {/* Table + Detail */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         <div className="flex-[3] flex flex-col min-w-0 border-r border-rose-border bg-rose-muted/10 overflow-hidden">
-          <div ref={mainScroll.ref} {...mainScroll.props} className="flex-1 overflow-y-auto hide-scrollbar px-[clamp(4px,1vmin,24px)] pb-[clamp(4px,1vmin,24px)]">
-            <div className="bg-white rounded-xl lg:rounded-[2.5rem] border border-rose-border shadow-2xl">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead className="bg-white text-rose-400 font-black uppercase text-[clamp(8px,1.8vmin,10px)] border-b border-rose-border tracking-[0.2em] sticky top-0 z-10 shadow-sm">
+          <div className="flex-1 px-[clamp(4px,1vmin,24px)] pb-[clamp(4px,1vmin,24px)] min-h-0">
+            <div
+              ref={mainScroll.ref}
+              {...mainScroll.props}
+              className="bg-white rounded-xl lg:rounded-[2.5rem] border border-rose-border shadow-2xl overflow-y-auto hide-scrollbar h-full cursor-grab active:cursor-grabbing"
+            >
+               <table className="w-full text-left border-collapse min-w-full">
+                <thead className="bg-white text-rose-400 font-black uppercase text-[10px] sm:text-[11px] border-b border-rose-border tracking-[0.15em] sticky top-0 z-10 shadow-sm">
                   <tr>
-                    <th className="p-[clamp(8px,2vmin,20px)] w-16 text-center">Estado</th>
-                    <th className="p-[clamp(8px,2vmin,20px)]">Nombre / Tipo</th>
-                    <th className="p-[clamp(8px,2vmin,20px)] hidden sm:table-cell">Categoria</th>
-                    <th className="p-[clamp(8px,2vmin,20px)] text-right">Precio</th>
-                    <th className="p-[clamp(8px,2vmin,20px)] w-24 text-center">Acciones</th>
+                    <th className="p-2 sm:p-3 lg:p-4 w-12 sm:w-16 text-center">Estado</th>
+                    <th className="p-2 sm:p-3 lg:p-4">Nombre / Tipo</th>
+                    <th className="p-2 sm:p-3 lg:p-4 hidden sm:table-cell">Categoria</th>
+                    <th className="p-2 sm:p-3 lg:p-4 text-right">Precio</th>
+                    <th className="p-2 sm:p-3 lg:p-4 w-20 sm:w-24 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-rose-border">
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={5} className="p-[clamp(24px,6vmin,128px)] text-center text-rose-400 italic font-black uppercase opacity-30">Sin resultados</td></tr>
+                    <tr><td colSpan={5} className="p-8 sm:p-12 lg:p-16 text-center text-rose-400 italic font-black uppercase opacity-30">Sin resultados</td></tr>
                   ) : filtered.map(item => (
                     <tr key={item.id} onClick={() => selectItem(item.id)} className={"group cursor-pointer transition-all " + (selectedId === item.id ? "bg-pink-600/10" : "hover:bg-rose-muted")}>
-                      <td className="p-[clamp(6px,1.5vmin,20px)]">
+                      <td className="p-2 sm:p-3 lg:p-4">
                         <div className="flex justify-center">
                           <button onClick={(e) => handleToggleActive(item, e)} className={"w-9 h-5 rounded-full relative transition-all duration-300 " + (item.active ? "bg-emerald-600" : "bg-rose-muted")}>
                             <div className={"absolute top-1 w-3 h-3 bg-white rounded-full shadow-md transition-all duration-300 " + (item.active ? "left-[14px]" : "left-1")} />
                           </button>
                         </div>
                       </td>
-                      <td className="p-[clamp(6px,1.5vmin,20px)]">
+                      <td className="p-2 sm:p-3 lg:p-4">
                         <div className="flex items-center gap-2">
-                          <div className={"w-7 h-7 rounded-lg flex items-center justify-center shadow-lg shrink-0 " + (item.type === "service" ? "bg-blue-600/10 text-blue-500" : item.type === "combo" ? "bg-indigo-600/10 text-indigo-500" : "bg-amber-600/10 text-amber-500")}>
+                          <div className={"w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shadow-lg shrink-0 " + (item.type === "service" ? "bg-blue-600/10 text-blue-500" : item.type === "combo" ? "bg-indigo-600/10 text-indigo-500" : "bg-amber-600/10 text-amber-500")}>
                             {item.type === "service" ? <Scissors size={12} /> : item.type === "combo" ? <Layers size={12} /> : <Package size={12} />}
                           </div>
-                          <div><div className="font-black text-rose-900 text-[clamp(11px,2.5vmin,14px)] uppercase truncate">{item.name}</div><div className="text-[clamp(8px,1.5vmin,9px)] font-black uppercase text-rose-400">{item.type}</div></div>
+                          <div className="min-w-0"><div className="font-black text-rose-900 text-xs sm:text-sm uppercase truncate">{item.name}</div><div className="text-[10px] font-black uppercase text-rose-400">{item.type}</div></div>
                         </div>
                       </td>
-                      <td className="p-[clamp(6px,1.5vmin,20px)] hidden sm:table-cell"><span className="text-[clamp(9px,2vmin,10px)] font-black text-rose-500 uppercase bg-white px-2 py-1 rounded-lg border">{item.category}</span></td>
-                      <td className="p-[clamp(6px,1.5vmin,20px)] text-right"><div className="text-[clamp(14px,3.5vmin,20px)] font-black text-rose-900 tracking-tighter font-mono">${item.price.toFixed(2)}</div></td>
-                      <td className="p-[clamp(6px,1.5vmin,20px)]">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="p-2 sm:p-3 lg:p-4 hidden sm:table-cell"><span className="text-[10px] sm:text-[11px] font-black text-rose-500 uppercase bg-white px-2 py-1 rounded-lg border">{item.category}</span></td>
+                      <td className="p-2 sm:p-3 lg:p-4 text-right"><div className="text-sm sm:text-base font-black text-rose-900 tracking-tighter font-mono">${item.price.toFixed(2)}</div></td>
+                      <td className="p-2 sm:p-3 lg:p-4">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
                           <button onClick={(e) => { e.stopPropagation(); handleOpenModal(item); }} className="p-1.5 bg-rose-muted text-rose-500 hover:bg-white hover:text-rose-900 rounded-lg transition-all shadow-lg"><Edit size={11} /></button>
                           <button onClick={(e) => handleDeleteItem(item, e)} className="p-1.5 bg-rose-muted text-rose-700 hover:bg-destructive hover:text-white rounded-lg transition-all shadow-lg"><Trash2 size={11} /></button>
                         </div>
@@ -221,11 +225,38 @@ const DetailPanel = ({ item, catalog, onEdit, onDelete }: { item: CatalogItem; c
     <div className="mb-[clamp(8px,2vmin,20px)]">
       <div className="flex items-center gap-1 text-rose-500 mb-1"><Tag size={10} /><span className="text-[clamp(8px,1.5vmin,9px)] font-black uppercase">{item.category}</span></div>
       <h2 className="text-[clamp(14px,3.5vmin,22px)] font-black text-rose-900 uppercase tracking-tight leading-[0.9]">{item.name}</h2>
+      {item.sku && <div className="mt-1 text-[clamp(8px,1.5vmin,9px)] font-bold text-rose-400 uppercase font-mono">SKU: {item.sku}</div>}
     </div>
-    <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(8px,2vmin,16px)] border mb-[clamp(8px,2vmin,20px)] flex flex-col gap-1 shadow-inner">
-      <span className="text-[clamp(8px,1.5vmin,9px)] font-black text-rose-400 uppercase">PVP</span>
-      <div className="flex items-baseline gap-1"><span className="text-[clamp(12px,2.5vmin,16px)] font-black text-emerald-500/50 font-mono">$</span><div className="text-[clamp(20px,5vmin,36px)] font-black text-emerald-500 font-mono tracking-tighter leading-none">{item.price.toFixed(2)}</div></div>
-    </div>
+    {item.imageUrl && (
+      <div className="mb-[clamp(8px,2vmin,20px)] rounded-[clamp(12px,2vmin,20px)] overflow-hidden border bg-rose-muted/30">
+        <img src={item.imageUrl} alt={item.name} className="w-full h-auto max-h-48 object-contain" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      </div>
+    )}
+    {item.type === 'product' ? (
+      <div className="grid grid-cols-2 gap-2 mb-[clamp(8px,2vmin,20px)]">
+        <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(6px,1.5vmin,12px)] border shadow-inner">
+          <span className="text-[clamp(7px,1.2vmin,8px)] font-black text-rose-400 uppercase">Costo</span>
+          <div className="flex items-baseline gap-1"><span className="text-[clamp(10px,2vmin,12px)] font-black text-rose-400/50 font-mono">$</span><span className="text-[clamp(14px,3vmin,22px)] font-black text-rose-400 font-mono tracking-tighter leading-none">{item.cost?.toFixed(2) || '0.00'}</span></div>
+        </div>
+        <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(6px,1.5vmin,12px)] border shadow-inner">
+          <span className="text-[clamp(7px,1.2vmin,8px)] font-black text-rose-400 uppercase">Etiqueta</span>
+          <div className="flex items-baseline gap-1"><span className="text-[clamp(10px,2vmin,12px)] font-black text-rose-400/50 font-mono">$</span><span className="text-[clamp(14px,3vmin,22px)] font-black text-rose-400 font-mono tracking-tighter leading-none">{item.etiqueta?.toFixed(2) || '0.00'}</span></div>
+        </div>
+        <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(6px,1.5vmin,12px)] border shadow-inner">
+          <span className="text-[clamp(7px,1.2vmin,8px)] font-black text-rose-400 uppercase">Sugerido</span>
+          <div className="flex items-baseline gap-1"><span className="text-[clamp(10px,2vmin,12px)] font-black text-rose-400/50 font-mono">$</span><span className="text-[clamp(14px,3vmin,22px)] font-black text-rose-400 font-mono tracking-tighter leading-none">{item.sugerido?.toFixed(2) || '0.00'}</span></div>
+        </div>
+        <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(6px,1.5vmin,12px)] border shadow-inner">
+          <span className="text-[clamp(7px,1.2vmin,8px)] font-black text-rose-400 uppercase">Precio Venta</span>
+          <div className="flex items-baseline gap-1"><span className="text-[clamp(10px,2vmin,12px)] font-black text-emerald-500/50 font-mono">$</span><span className="text-[clamp(14px,3vmin,22px)] font-black text-emerald-500 font-mono tracking-tighter leading-none">{item.price.toFixed(2)}</span></div>
+        </div>
+      </div>
+    ) : (
+      <div className="bg-rose-muted rounded-[clamp(12px,2vmin,20px)] p-[clamp(8px,2vmin,16px)] border mb-[clamp(8px,2vmin,20px)] flex flex-col gap-1 shadow-inner">
+        <span className="text-[clamp(8px,1.5vmin,9px)] font-black text-rose-400 uppercase">PVP</span>
+        <div className="flex items-baseline gap-1"><span className="text-[clamp(12px,2.5vmin,16px)] font-black text-emerald-500/50 font-mono">$</span><div className="text-[clamp(20px,5vmin,36px)] font-black text-emerald-500 font-mono tracking-tighter leading-none">{item.price.toFixed(2)}</div></div>
+      </div>
+    )}
     {item.type === 'combo' && <ComboSection item={item} catalog={catalog} />}
     {item.type !== 'combo' && (
       <div className="mt-auto pt-[clamp(8px,2vmin,16px)] border-t border-rose-border">
@@ -268,6 +299,10 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
   const [price, setPrice] = useState(initialData?.price.toString() || '');
   const [type, setType] = useState<ItemType>(initialData?.type || 'service');
   const [category, setCategory] = useState(initialData?.category || (categories[0] ? (typeof categories[0] === 'string' ? categories[0] : categories[0].name) : '') || 'General');
+  const [etiqueta, setEtiqueta] = useState(initialData?.etiqueta?.toString() || '');
+  const [sugerido, setSugerido] = useState(initialData?.sugerido?.toString() || '');
+  const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || (initialData as any)?.image_url || '');
+  const [sku, setSku] = useState(initialData?.sku || (initialData as any)?.sku || '');
   const [comboItems, setComboItems] = useState<string[]>(initialData?.comboDefinition || []);
   const [comboSearch, setComboSearch] = useState('');
   const [showManageCategories, setShowManageCategories] = useState(false);
@@ -280,7 +315,7 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
     if (isCreatingCategory && newCategoryName.trim()) { finalCategory = newCategoryName.trim(); addCategory(finalCategory); }
     const catObj = categories.find((c: any) => c.name === finalCategory);
     if (catObj) finalCategoryId = catObj.id;
-    onSave({ id: initialData?.id || crypto.randomUUID(), name, price: parseFloat(price), type, category: finalCategory, categoryId: finalCategoryId, active: initialData ? initialData.active : true, comboDefinition: type === 'combo' ? comboItems : undefined }, !!initialData);
+    onSave({ id: initialData?.id || crypto.randomUUID(), name, price: parseFloat(price), type, category: finalCategory, categoryId: finalCategoryId, active: initialData ? initialData.active : true, cost: initialData?.cost || 0, etiqueta: parseFloat(etiqueta) || 0, sugerido: parseFloat(sugerido) || 0, imageUrl: imageUrl || undefined, sku: sku || undefined, comboDefinition: type === 'combo' ? comboItems : undefined }, !!initialData);
   };
   const comboRealTotal = useMemo(() => comboItems.reduce((acc, curr) => { const item = fullCatalog.find((i: any) => i.id === curr); return acc + (item ? item.price : 0); }, 0), [comboItems, fullCatalog]);
   const savings = comboRealTotal - (parseFloat(price) || 0);
@@ -326,12 +361,53 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
               {comboItems.length > 0 && <div className="pt-2 border-t flex justify-between items-center px-1"><span className="text-[9px] font-black text-rose-500 uppercase">Valor Real:</span><span className="text-[10px] font-mono font-black text-rose-500 line-through">${comboRealTotal.toFixed(2)}</span></div>}
             </div>
           )}
-          <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">{type === 'combo' ? 'Precio Oferta' : 'Precio PVP'}</label>
-            <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">$</span>
-              <input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
+          {type === 'product' ? (
+            <><div className="grid grid-cols-2 gap-3">
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Costo</label>
+                <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400 font-black text-lg font-mono">$</span>
+                  <input disabled value={initialData?.cost?.toFixed(2) || '0.00'} className="w-full bg-rose-muted/50 border rounded-xl py-3 pl-10 pr-4 text-rose-400 font-mono font-black text-xl shadow-inner text-right cursor-not-allowed" />
+                </div>
+              </div>
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Etiqueta</label>
+                <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">$</span>
+                  <input type="number" step="0.01" value={etiqueta} onChange={e => setEtiqueta(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
+                </div>
+              </div>
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Sugerido</label>
+                <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">$</span>
+                  <input type="number" step="0.01" value={sugerido} onChange={e => setSugerido(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
+                </div>
+              </div>
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Precio Venta</label>
+                <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">$</span>
+                  <input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
+                </div>
+              </div>
             </div>
-            {type === 'combo' && savings > 0 && <div className="mt-2 text-right"><span className="text-xs font-black text-emerald-400 uppercase bg-emerald-950/50 border border-emerald-900/50 px-3 py-1.5 rounded-lg inline-flex items-center gap-2 shadow-lg">Ahorro: ${savings.toFixed(2)} ({((savings / comboRealTotal) * 100).toFixed(0)}%)</span></div>}
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2"><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Imagen (URL)</label>
+                <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full bg-white border rounded-xl py-3 px-4 text-rose-900 outline-none focus:border-rose-palo font-bold text-xs shadow-inner" placeholder="https://ejemplo.com/imagen.jpg" />
+              </div>
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">SKU / Código</label>
+                <input value={sku} onChange={e => setSku(e.target.value)} className="w-full bg-white border rounded-xl py-3 px-4 text-rose-900 outline-none focus:border-rose-palo font-bold text-xs shadow-inner uppercase" placeholder="PROD-001" />
+              </div>
+              <div className="flex items-end">
+                {imageUrl && (
+                  <div className="w-full h-32 rounded-xl overflow-hidden border bg-rose-muted/30 flex items-center justify-center">
+                    <img src={imageUrl} alt="preview" className="h-full object-contain" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+          ) : (
+            <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">{type === 'combo' ? 'Precio Oferta' : 'Precio PVP'}</label>
+              <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">$</span>
+                <input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
+              </div>
+              {type === 'combo' && savings > 0 && <div className="mt-2 text-right"><span className="text-xs font-black text-emerald-400 uppercase bg-emerald-950/50 border border-emerald-900/50 px-3 py-1.5 rounded-lg inline-flex items-center gap-2 shadow-lg">Ahorro: ${savings.toFixed(2)} ({((savings / comboRealTotal) * 100).toFixed(0)}%)</span></div>}
+            </div>
+          )}
           <div className="pt-2 flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 bg-rose-muted text-rose-500 hover:text-rose-900 py-4 rounded-xl font-black uppercase text-[10px] transition-all">Cerrar</button>
             <button type="submit" className="flex-[1.5] bg-pink-600 hover:bg-pink-500 text-white py-4 rounded-xl font-black uppercase text-[10px] shadow-xl active:scale-95 transition-all border-b-4 border-pink-800">{initialData ? 'Guardar' : 'Registrar'}</button>

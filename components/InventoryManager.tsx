@@ -275,12 +275,12 @@ export const InventoryManager = () => {
                         <StatHeaderCard icon={<Coins size={14} className="text-emerald-500" />} label="Inversión Total" value={`$${stats.totalInvestment.toFixed(2)}`} sub="Valor de Inventario" color="text-emerald-500" />
                     </div>
 
-                    <div
-                        ref={mainScroll.ref}
-                        {...mainScroll.props}
-                        className="flex-1 overflow-y-auto hide-scrollbar p-[clamp(8px,2vmin,24px)]"
-                    >
-                        <div className="bg-white rounded-[clamp(1rem,3vmin,2.5rem)] border border-rose-border overflow-hidden shadow-xl">
+                    <div className="flex-1 p-[clamp(8px,2vmin,24px)] min-h-0">
+                        <div
+                            ref={mainScroll.ref}
+                            {...mainScroll.props}
+                            className="bg-white rounded-[clamp(1rem,3vmin,2.5rem)] border border-rose-border overflow-y-auto hide-scrollbar shadow-xl h-full cursor-grab active:cursor-grabbing"
+                        >
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-rose-muted text-rose-400 font-black uppercase text-[clamp(8px,1.5vmin,10px)] border-b border-rose-border tracking-widest sticky top-0 z-10">
                                     <tr>

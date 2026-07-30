@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useBarber } from '../../context/BarberContext';
 import { Login } from '../Login';
@@ -63,10 +63,42 @@ function AuthRedirect() {
 }
 
 export function AppRoutes() {
-  const { currentUser } = useBarber();
+  const { currentUser, config } = useBarber();
+  const [showWelcome, setShowWelcome] = useState(true);
+  const prevUserRef = useRef(currentUser);
+
+  // Mostrar saludo cada vez que el usuario pasa de no logueado a logueado
+  useEffect(() => {
+    if (!prevUserRef.current && currentUser) {
+      setShowWelcome(true);
+    }
+    prevUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!showWelcome) return;
+    const t = setTimeout(() => setShowWelcome(false), 1500);
+    return () => clearTimeout(t);
+  }, [showWelcome]);
 
   if (!currentUser) return <Login />;
   if (currentUser.role === 'display') return <QueueDisplay />;
+
+  if (showWelcome) {
+    return (
+      <div className="h-screen bg-rose-bg flex items-center justify-center animate-in fade-in duration-700">
+        <div className="text-center px-6 animate-in zoom-in duration-500">
+          <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 inline-block" style={{ animation: 'wave 1.5s ease-in-out infinite', transformOrigin: '70% 70%' }}>
+            👋
+          </div>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-black animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <span className="text-shimmer">Bienvenid@,</span>{' '}
+            <span className="text-rose-800">{currentUser?.name}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -136,23 +136,21 @@ export const CashReport = ({ navigateView }: CashReportProps) => {
                     <div className="flex items-center gap-1 sm:gap-2"><span className="text-[clamp(8px,1.5vmin,9px)] font-black text-rose-500 uppercase">Fecha</span><input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-white border border-rose-border rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-[clamp(10px,2vmin,12px)] font-bold text-rose-900 outline-none" /></div>
                     <span className="text-[clamp(8px,1.5vmin,9px)] font-black text-rose-400 uppercase">{filterDate ? filteredClosures.length : cashClosures.length} resultados</span>
                 </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-white border border-rose-border rounded-xl sm:rounded-2xl lg:rounded-[2rem]">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[500px]">
-                            <thead className="bg-white text-rose-400 font-black uppercase text-[clamp(8px,1.5vmin,10px)] border-b border-rose-border tracking-widest sticky top-0 z-10 shadow-sm">
-                                <tr><th className="p-[clamp(8px,2vmin,20px)]">Fecha</th><th className="p-[clamp(8px,2vmin,20px)]">Cajero</th><th className="p-[clamp(8px,2vmin,20px)] text-right">Efectivo</th><th className="p-[clamp(8px,2vmin,20px)] text-right">Venta Total</th><th className="p-[clamp(8px,2vmin,20px)] text-center">Ver</th></tr>
-                            </thead>
-                            <tbody className="divide-y divide-rose-border">{(filteredClosures.length === 0 ? cashClosures : filteredClosures).map(c => (
-                                <tr key={c.id} className="hover:bg-rose-muted transition-colors">
-                                    <td className="p-[clamp(8px,2vmin,20px)]"><div className="font-black text-rose-900 text-[clamp(11px,2.5vmin,14px)] uppercase">{formatDateTimeES(c.closedAt!)}</div></td>
-                                    <td className="p-[clamp(8px,2vmin,20px)] text-rose-500 font-black text-[clamp(10px,2vmin,11px)] uppercase">{c.openedBy}</td>
-                                    <td className="p-[clamp(8px,2vmin,20px)] text-right font-black text-emerald-500 font-mono text-[clamp(12px,3vmin,14px)]">${(c.openingAmount + c.totalCash).toFixed(2)}</td>
-                                    <td className="p-[clamp(8px,2vmin,20px)] text-right font-black text-rose-900 font-mono text-[clamp(14px,3.5vmin,18px)]">${c.totalSales.toFixed(2)}</td>
-                                    <td className="p-[clamp(8px,2vmin,20px)] text-center"><button onClick={() => { setViewingClosureId(c.id); setTab('current'); }} className="p-[clamp(4px,1vmin,8px)] bg-rose-muted hover:bg-blue-600 text-rose-500 hover:text-white rounded-lg sm:rounded-xl transition-all shadow-md"><Eye size={14} /></button></td>
-                                </tr>
-                            ))}</tbody>
-                        </table>
-                    </div>
+                <div className="flex-1 overflow-auto custom-scrollbar bg-white border border-rose-border rounded-xl sm:rounded-2xl lg:rounded-[2rem]">
+                    <table className="w-full text-left border-collapse min-w-[500px]">
+                        <thead className="bg-white text-rose-400 font-black uppercase text-[clamp(8px,1.5vmin,10px)] border-b border-rose-border tracking-widest sticky top-0 z-10 shadow-sm">
+                            <tr><th className="p-[clamp(8px,2vmin,20px)]">Fecha</th><th className="p-[clamp(8px,2vmin,20px)]">Cajero</th><th className="p-[clamp(8px,2vmin,20px)] text-right">Efectivo</th><th className="p-[clamp(8px,2vmin,20px)] text-right">Venta Total</th><th className="p-[clamp(8px,2vmin,20px)] text-center">Ver</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-rose-border">{(filteredClosures.length === 0 ? cashClosures : filteredClosures).map(c => (
+                            <tr key={c.id} className="hover:bg-rose-muted transition-colors">
+                                <td className="p-[clamp(8px,2vmin,20px)]"><div className="font-black text-rose-900 text-[clamp(11px,2.5vmin,14px)] uppercase">{formatDateTimeES(c.closedAt!)}</div></td>
+                                <td className="p-[clamp(8px,2vmin,20px)] text-rose-500 font-black text-[clamp(10px,2vmin,11px)] uppercase">{c.openedBy}</td>
+                                <td className="p-[clamp(8px,2vmin,20px)] text-right font-black text-emerald-500 font-mono text-[clamp(12px,3vmin,14px)]">${(c.openingAmount + c.totalCash).toFixed(2)}</td>
+                                <td className="p-[clamp(8px,2vmin,20px)] text-right font-black text-rose-900 font-mono text-[clamp(14px,3.5vmin,18px)]">${c.totalSales.toFixed(2)}</td>
+                                <td className="p-[clamp(8px,2vmin,20px)] text-center"><button onClick={() => { setViewingClosureId(c.id); setTab('current'); }} className="p-[clamp(4px,1vmin,8px)] bg-rose-muted hover:bg-blue-600 text-rose-500 hover:text-white rounded-lg sm:rounded-xl transition-all shadow-md"><Eye size={14} /></button></td>
+                            </tr>
+                        ))}</tbody>
+                    </table>
                 </div>
             </div>
         );

@@ -161,10 +161,10 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                 const response = await fetch(`./version.json?t=${Date.now()}`, { cache: 'no-cache' });
                 const data = await response.json();
                 const serverVersion = data.version;
-                const localVersion = localStorage.getItem('barberos_version');
+                const localVersion = localStorage.getItem('obvio_os_version');
 
                 if (localVersion && localVersion !== serverVersion) {
-                    localStorage.setItem('barberos_version', serverVersion);
+                    localStorage.setItem('obvio_os_version', serverVersion);
                     showToast('info', 'Actualización', 'Nueva versión disponible. Recargando...');
                     setTimeout(() => {
                         if ('caches' in window) {
@@ -173,7 +173,7 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                         window.location.reload();
                     }, 3000);
                 } else if (!localVersion) {
-                    localStorage.setItem('barberos_version', serverVersion);
+                    localStorage.setItem('obvio_os_version', serverVersion);
                 }
             } catch (err) {
                 console.log('Error checking version:', err);
@@ -231,6 +231,10 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                     categoryId: String(item.category_id || ''),
                     active: item.active === 1 || item.active === true,
                     cost: parseFloat(item.cost || 0),
+                    imageUrl: item.imageUrl || item.image_url || undefined,
+                    sku: item.sku || undefined,
+                    etiqueta: item.etiqueta ? parseFloat(item.etiqueta) : undefined,
+                    sugerido: item.sugerido ? parseFloat(item.sugerido) : undefined,
                     comboDefinition: typeof item.combo_definition === 'string' ? JSON.parse(item.combo_definition) : item.combo_definition
                 }));
 

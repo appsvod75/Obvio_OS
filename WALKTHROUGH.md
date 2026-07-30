@@ -17,10 +17,24 @@ Pantalla de inicio con:
 
 ---
 
-## 2. Menú Principal (Admin Panel)
+## 2. Menú Principal (Admin Panel) — DashboardHome
 
 Grid de iconos para acceder a todos los módulos.
-Los iconos visibles se controlan desde **Configuración → Paneles**.
+- Archivo: `components/layout/DashboardHome.tsx`
+- Grid responsive: 2 cols móvil → 3 tablet → 5 tablet apaisado → 5 laptop → 6 desktop → 8 pantallas grandes
+- Botones con altura mínima creciente (100px → 165px según viewport)
+- Iconos responsive: w-5 / w-7 / w-8 / w-9 según breakpoint
+- Texto responsive: 14px → 15px → 16px
+- Sin max-width: usa todo el ancho disponible
+- Animación fadeInUp escalonada en cada botón
+- Los iconos visibles se controlan desde **Configuración → Paneles** (hiddenPanels)
+
+### Pantalla de Bienvenida
+- Aparece al iniciar sesión o recargar la página (1.5 segundos)
+- Muestra 👋 con animación de saludo (wave)
+- Texto "Bienvenid@," con efecto shimmer (barrido de luz)
+- Nombre del usuario en color rose-800
+- No se repite al navegar entre vistas internas
 
 ---
 
@@ -43,7 +57,11 @@ Los iconos visibles se controlan desde **Configuración → Paneles**.
 5. Pagar y cobrar
 
 ### Características del POS
-- **Catálogo** con búsqueda y filtro por categorías (drag-scroll)
+- **Catálogo** agrupado por tipo: Servicios / Productos / Combos (cada grupo con su propio grid)
+- **Orden alfabético** dentro de cada sección
+- **Grid responsive por sección**: 2→3→5→5→6→8 columnas según viewport
+- **Imágenes de producto** con aspect ratio 16:10
+- **Buscador** con input estilizado y drag-scroll
 - **Carrito responsive**: overlay en móvil, sidebar fijo en desktop
 - **Pagos divididos**: podés mezclar métodos de pago
 - **Promociones activas** se aplican automáticamente
@@ -168,6 +186,21 @@ Esto es más preciso que una estimación calendario porque:
 
 ---
 
+## 6b. Catálogo (Servicios, Productos, Combos)
+
+Gestionado desde `CatalogManager.tsx`.
+
+### Características
+- **Tabla responsive**: se adapta al viewport sin forzar scroll horizontal
+- Padding y texto responsive por breakpoint (p-2 sm:p-3 lg:p-4)
+- **Columna Categoría** oculta en móvil (visible desde sm:)
+- **Filtros** tipo: Servicios / Productos / Combos + búsqueda
+- **DetailPanel** lateral en desktop, overlay en móvil
+- Toggle activo/inactivo, editar, eliminar
+- Formulario modal para crear/editar items
+
+---
+
 ## 7. Historial de Ventas
 
 - Filtro por fechas y búsqueda por cliente/folio
@@ -193,22 +226,24 @@ Esto es más preciso que una estimación calendario porque:
 ## 9. Responsive Design
 
 ### Estrategia
-- Uso intensivo de `clamp(min, vmin, max)` para escalar proporcional
-- Breakpoints: `sm: 640px | md: 768px | lg: 1024px | xl: 1280px`
-- `vmin` = el menor entre ancho y alto del viewport
+- Uso de **breakpoints de Tailwind** (`sm: md: lg: xl: 2xl:`) para escalar tamaños
+- En componentes nuevos se prefiere `text-xs sm:text-sm lg:text-base` sobre `clamp()`
+- `clamp()` se mantiene en componentes legacy o modales específicos (ej: ReceiptModal)
+- Breakpoints: `sm: 640px | md: 768px | lg: 1024px | xl: 1280px | 2xl: 1536px`
 
 ### Componentes Responsive
 - **Login**: card centrada, logo circular escalable
-- **POS**: catálogo con grid responsive (2→3→5→6 cols), carrito overlay
+- **Dashboard (menú principal)**: grid responsive (2→3→5→5→6→8 cols), botones con min-h por breakpoint
+- **POS**: catálogo agrupado por tipo, grid responsive (2→3→5→5→6→8 cols), imágenes 16:10
 - **Recepción**: chips de servicios en grid de 3 columnas
 - **Agenda**: calendario + lista, cambia de layout en lg
 - **Ventas**: tabla con scroll horizontal, header fijo, columnas se ocultan
+- **Catálogo (servicios/productos)**: tabla responsive sin scroll horizontal forzado, padding/texto por breakpoint
 - **Settings**: tabs con chips, grid responsive
 - **Sidebar**: overlay móvil, sticky desktop
 - **Inventario**: tabla principal + detalle lateral, modales ERP responsivos con clamp
 - **Promociones**: grid de promos 1→2→3 cols, sección Lealtad responsive con clamp
 - **Sucursales**: panel formulario + network deck, scroll interno en form
-- **Catálogo**: DetailPanel compacto con clamp reducido
 
 ---
 

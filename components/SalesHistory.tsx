@@ -164,10 +164,14 @@ export const SalesHistory = ({ navigateView, hideSummary = false }: SalesHistory
             )}
 
             <div className="flex-1 flex flex-col overflow-hidden border border-rose-border rounded-[clamp(12px,3vmin,40px)] bg-white shadow-2xl">
-                <div className="overflow-x-auto shrink-0">
+                <div
+                    ref={scroll.ref}
+                    {...scroll.props}
+                    className="flex-1 overflow-auto hide-scrollbar cursor-grab active:cursor-grabbing"
+                >
                     <div className="min-w-[clamp(500px,80vmin,900px)]">
                         <table className="w-full text-left border-collapse">
-                            <thead className="bg-rose-bg/80 backdrop-blur-md text-rose-400 font-black uppercase text-[clamp(7px,1.2vmin,10px)] border-b border-rose-border tracking-[0.3em]">
+                            <thead className="bg-rose-bg/90 backdrop-blur-md text-rose-400 font-black uppercase text-[clamp(7px,1.2vmin,10px)] border-b border-rose-border tracking-[0.3em] sticky top-0 z-10 shadow-sm">
                                 <tr>
                                     <th className="p-[clamp(4px,1vmin,20px)] w-[clamp(60px,15vmin,120px)]">Fecha</th>
                                     <th className="p-[clamp(4px,1vmin,20px)]">Cliente</th>
@@ -177,16 +181,6 @@ export const SalesHistory = ({ navigateView, hideSummary = false }: SalesHistory
                                     <th className="p-[clamp(4px,1vmin,20px)] w-[clamp(32px,8vmin,80px)] text-center">Ver</th>
                                 </tr>
                             </thead>
-                        </table>
-                    </div>
-                </div>
-                <div
-                    ref={scroll.ref}
-                    {...scroll.props}
-                    className="flex-1 overflow-y-auto hide-scrollbar"
-                >
-                    <div className="min-w-[clamp(500px,80vmin,900px)]">
-                        <table className="w-full text-left border-collapse">
                             <tbody className="divide-y divide-rose-border">
                                 {filteredSales.length === 0 ? (
                                     <tr><td colSpan={6} className="p-[clamp(16px,4vmin,80px)] text-center text-rose-400 italic font-black uppercase tracking-[0.5em] opacity-20">Sin registros</td></tr>

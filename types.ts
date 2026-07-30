@@ -66,6 +66,10 @@ export interface CatalogItem {
   categoryId?: string;
   active?: boolean;
   cost?: number;
+  etiqueta?: number;
+  sugerido?: number;
+  imageUrl?: string;
+  sku?: string;
   comboDefinition?: string[];
 }
 
