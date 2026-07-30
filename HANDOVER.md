@@ -241,11 +241,65 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - No hay migraciones de DB — los cambios de schema se manejan con ALTER TABLE en seedIfEmpty
 - La app usa el role `'estilista'` (no `'barber'`)
 - Los tickets de recepción con códigos multi-letra (ej: CE+PE) no mapean automáticamente a productos en el POS
-- Inventario de insumos + recetas de servicios (bom list) — pendiente de implementar
 - El `sync_needed` actual hace sync completo de todos los datos — optimizable a eventos por entidad específica
 - Telegram: se necesita crear un bot en @BotFather y pegar el token en Config → Telegram Bot Token
 - `components/Dashboard.tsx` eliminado (no se usaba, reemplazado por `layout/DashboardHome.tsx`)
 - HANDOVER.md y WALKTHROUGH.md deben mantenerse actualizados como fuente de contexto para agentes/sesiones nuevas
+
+---
+
+## Próximas Features (Pendientes de definir)
+
+### 1. Inventario Inteligente con Recetas (BOM)
+**Objetivo**: El admin quiere control de inventario más completo que solo "compro → sube, vendo → baja".
+
+**Requerimientos:**
+- Marcar items del catálogo como **insumo** (consumible para servicios), **producto** (se vende en POS), o ambos
+- Los insumos **NO aparecen en el POS** como vendibles
+- Crear **recetas** (BOM — Bill of Materials) para cada servicio:
+  - Ej: Servicio "Corte + Tinte" → consume: guantes latex (2un), tinte (1un), papel aluminio (1un)
+  - Al cobrar el servicio en POS, debitar automáticamente los insumos del inventario
+- Si un insumo también es producto: se vende en POS y se descuenta del mismo stock
+- **Alertas de stock bajo** separadas por tipo:
+  - "Insumos bajos: guantes (5un), tinte negro (2un)"
+  - "Productos bajos: shampoo x (3un)"
+- UI para gestionar recetas desde el CatalogManager o vista nueva
+
+**Pendiente**: Definir modelo de datos, UX de recetas, y si se debita al agregar al carrito o al cobrar.
+
+---
+
+### 2. Vista "Consultar" (desde Ventas_OS)
+**Objetivo**: Vista tipo consulta/búsqueda similar a la que existe en el proyecto Ventas_OS.
+
+**Requerimientos:**
+- Emular la vista "Consultar" de Ventas_OS
+- Aplicada a productos con 4 cosas (definir exactamente qué 4 campos/dimensiones)
+- Solo accesible para admin (pendiente confirmar)
+- Posiblemente un icono nuevo en el menú principal
+
+**Pendiente**: Definir exactamente qué muestra la vista y cómo se filtra.
+
+---
+
+### 3. Módulo de Finanzas
+**Objetivo**: Darle al admin una visión clara del dinero disponible del negocio mes a mes.
+
+**Requerimientos:**
+- Nuevo icono en el menú principal: **Finanzas**
+- **Apertura mensual**: cada mes se inicia con el dinero disponible del negocio
+- **Gastos**: registro de egresos (pago a proveedores, renta, servicios, nómina, etc.)
+- **Ingresos**: las ventas del POS suben automáticamente el disponible
+- **Cálculo**: `Disponible = Apertura + Ventas - Gastos`
+- Corte mensual para cerrar el mes y empezar el siguiente
+- Idea: darle al admin una cifra real de "con cuánto cuenta ahorita el negocio"
+- Complementa la proyección de ventas (que mira solo ingresos)
+
+**Pendiente**: Definir modelo de gastos, modal de registro, y si se integra con corte de caja (CashReport) o es independiente.
+
+---
+
+> **Nota**: Estas tres features están en fase de idea. Se requiere reunión con el admin para definir alcance y prioridad antes de implementar.
 
 ## Cómo Correr (Desarrollo)
 ```bash
