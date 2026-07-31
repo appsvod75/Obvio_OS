@@ -28,6 +28,9 @@ Grid de iconos para acceder a todos los módulos.
 - Sin max-width: usa todo el ancho disponible
 - Animación fadeInUp escalonada en cada botón
 - Los iconos visibles se controlan desde **Configuración → Paneles** (hiddenPanels)
+- **El orden de los iconos** se configura en **Configuración → Orden** (flechas ↑/↓). Se guarda en `menu_order`
+- Los módulos nuevos del menú aparecen **automáticamente** en Paneles y Orden (derivados de `menuButtons`)
+- Pantalla de bienvenida (👋) al entrar
 
 ### Pantalla de Bienvenida
 - Aparece al iniciar sesión o recargar la página (1.5 segundos)
@@ -63,6 +66,8 @@ Grid de iconos para acceder a todos los módulos.
 - **Imágenes de producto** con aspect ratio 16:10
 - **Buscador** con input estilizado y drag-scroll
 - **Carrito responsive**: overlay en móvil, sidebar fijo en desktop
+- **Multi-estilista**: botón "Estilista(s)" abre modal con selección múltiple (2 columnas). El ticket y el historial muestran todos los estilistas
+- **Recetas (BOM)**: al cobrar un servicio se debitan automáticamente los insumos de su receta; si falta stock se avisa pero la venta procede
 - **Pagos divididos**: podés mezclar métodos de pago
 - **Promociones activas** se aplican automáticamente
 - **Puntos de lealtad**: canjeables si el cliente tiene suficientes
@@ -171,6 +176,29 @@ Esto es más preciso que una estimación calendario porque:
 - Toggle para ocultar/mostrar cada módulo
 - Se aplica al menú de inicio y a la barra lateral
 - Persistente en DB (hidden_panels)
+
+### Orden
+- Flechas ↑/↓ para reordenar los módulos del menú principal
+- Se guarda al presionar Guardar (app_config.menu_order)
+- Los paneles ocultos no aparecen en esta lista
+
+### Catálogo: Insumos y Recetas
+- En el formulario de **producto**: marcá "Es insumo" (consumible para recetas) y "Se vende en POS" (si es solo insumo, desmarcá)
+- Campo "Stock mínimo" para las alertas de stock bajo
+- En el formulario de **servicio**: sección "Receta" donde buscás insumos y les ponés cantidad
+- Al cobrar el servicio, los insumos se debitan del inventario automáticamente
+
+---
+
+## 6c. Consultar Producto
+
+Vista tipo consulta (solo admin), icono "Consultar" en el menú principal.
+
+1. Buscá por **nombre, SKU o categoría** (autocompletado)
+2. Seleccioná el resultado → tarjeta de detalle
+3. Para **productos** ves los 4 precios: **Costo, Etiqueta, Sugerido, Precio Venta**
+4. Abajo, la fila **Stock & Margen**: chips por sucursal + Margen, % Costo, Costo, Venta
+5. X en el buscador para limpiar
 
 ### Zona Danger
 - **Backup DB**: descarga el archivo salon.db con checkpoint previo

@@ -216,6 +216,40 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - Columna Categoría oculta en móvil (`hidden sm:table-cell`)
 - Precios con tamaño fijo (`text-sm sm:text-base`) para evitar scroll horizontal
 - DetailPanel lateral en desktop, overlay en móvil
+- **Flags por producto**: "Es insumo" (`isInsumo`), "Se vende en POS" (`sellable`), stock mínimo (`minStock`)
+- **Editor de recetas** en servicios: busca solo insumos y agrega cantidad por item
+
+## Inventario Inteligente (Recetas BOM)
+- Los items pueden marcarse como **insumo** (consumible para servicios), **producto** (vendible en POS), o ambos
+- Los insumos puros (`sellable=false`) **no aparecen en el POS**
+- Cada servicio tiene una **receta** (tabla `service_recipes`): lista de insumos + cantidad
+- Al cobrar un servicio, el servidor **debita automáticamente** los insumos de la receta (cantidad × unidades vendidas)
+- Si un insumo es también producto, se descuenta del mismo stock al venderlo directo
+- **Stock insuficiente**: la venta procede pero devuelve `stockWarnings` y el POS muestra aviso
+- **Alertas de stock bajo** en Inventario: separadas en Insumos y Productos (según `minStock` de cada item)
+
+## POS Multi-Estilista
+- Botón "Estilista(s)" en el carrito → modal con **selección múltiple** (grid 2 columnas, checkmarks)
+- La venta guarda `barberIds` (JSON) + `barber_id` (primero, para compatibilidad de reportes)
+- **Ticket**: muestra todos los estilistas unidos con `+`
+- **Historial de ventas**: muestra todos los estilistas de cada venta
+- DB: columna `barbers` en `sales`
+
+## Consultar Producto (Vista Consulta)
+- Archivo: `components/ConsultarProducto.tsx` — ruta `/dashboard/lookup`, **solo admin/superadmin**
+- Buscador con autocompletado por nombre, SKU o categoría
+- Para **productos** muestra los 4 precios: Costo, Etiqueta, Sugerido, Precio Venta
+- Fila "Stock & Margen": chips uniformes por sucursal + Margen, % Costo, Costo, Venta
+- X dentro del buscador para limpiar
+- Icono "Consultar" en el menú principal (auto-agregado a Paneles y Orden)
+
+## Orden del Menú Principal (Configurable)
+- Nueva pestaña **"Orden"** en Configuración
+- Flechas ↑/↓ para reordenar los módulos del menú del admin
+- Se guarda en `app_config.menu_order` (JSON array de panelIds)
+- DashboardHome lee el orden **antes de renderizar** (coloca cada panel en su índice, el resto al final)
+- `ALL_PANELS` se exporta de DashboardHome y se usa en Paneles/Orden → **los módulos nuevos aparecen automáticamente**
+- DB: columna `menu_order` en `app_config`
 
 ## Proyección de Ventas (Plan Mensual)
 - `ReportingDashboard` calcula proyección basada en **días reales con ventas**:
