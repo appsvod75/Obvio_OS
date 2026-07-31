@@ -308,7 +308,8 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 - **Reporte de comisiones**:
   - El admin selecciona **rango de fechas** + **estilista**
   - Se calcula la comisión en base a la tabla establecida para las ventas del período
-- **Ventas compartidas**: si 2 o 3 estilistas trabajaron en una misma factura, el valor de esa venta se **divide entre los estilistas** y cada uno suma su parte
+- **Ventas compartidas**: el valor de una factura se divide **entre la cantidad real de estilistas** que trabajaron en ella
+  - Se cuenta los `barberIds` distintos de cada factura y se divide en partes iguales según ese número (2 → /2, 3 → /3, 4 → /4, etc., sea el que sea)
   - (Esto ya es posible porque las ventas guardan `barberIds`)
 - Idealmente un icono "Comisiones" en el menú principal
 
