@@ -2,39 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBarber } from '../context/BarberContext';
 import { useConfigCtx } from '../context/ConfigContext';
 import { useBranch } from '../context/BranchContext';
+import { ALL_PANELS } from './layout/DashboardHome';
 import {
     Settings, Save, CheckCircle2, Tv, ListVideo, Plus,
     Trash2, Youtube, FileVideo, Scissors, Printer, RefreshCcw,
     HardDrive, Zap, Upload, Image,
-    EyeOff, Eye, LayoutGrid, Download, AlertTriangle, MapPin,
+    EyeOff, Eye, LayoutGrid, Download, AlertTriangle, MapPin, ArrowUp, ArrowDown, GripVertical, ArrowUpDown,
 } from 'lucide-react';
 
-type TabKey = 'master' | 'tv' | 'panels' | 'danger';
+type TabKey = 'master' | 'tv' | 'panels' | 'order' | 'danger';
 
 const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'master', label: 'General', icon: <Settings size={14} /> },
     { key: 'tv', label: 'Cartelera TV', icon: <Tv size={14} /> },
     { key: 'panels', label: 'Paneles', icon: <LayoutGrid size={14} /> },
+    { key: 'order', label: 'Orden', icon: <ArrowUpDown size={14} /> },
     { key: 'danger', label: 'Zona Danger', icon: <span className="text-destructive">⚠️</span> },
 ];
 
-const allPanels = [
-    { id: 'pos', label: 'POS / Caja', icon: '🛒' },
-    { id: 'reception', label: 'Recepción', icon: '👥' },
-    { id: 'agenda', label: 'Agenda', icon: '📅' },
-    { id: 'clients', label: 'Clientes', icon: '👤' },
-    { id: 'catalog', label: 'Catálogo', icon: '🏷️' },
-    { id: 'inventory', label: 'Inventario', icon: '📦' },
-    { id: 'promotions', label: 'Promociones', icon: '⚡' },
-    { id: 'sales', label: 'Ventas', icon: '🕐' },
-    { id: 'cash_cut', label: 'Corte Caja', icon: '💰' },
-    { id: 'branches', label: 'Sucursales', icon: '🏪' },
-    { id: 'staff', label: 'Equipo', icon: '👨‍💼' },
-    { id: 'reports', label: 'Reportes', icon: '📊' },
-    { id: 'display', label: 'Pantalla TV', icon: '📺' },
-    { id: 'settings_tv', label: 'Ajustes TV', icon: '🔧' },
-    { id: 'settings_master', label: 'Configuración', icon: '⚙️' },
-];
+const allPanels = ALL_PANELS;
 
 export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey }) => {
     const { config, updateConfig } = useConfigCtx();
@@ -61,6 +47,9 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
 
     // Panel visibility
     const [hiddenPanels, setHiddenPanels] = useState<string[]>(config.hiddenPanels || []);
+
+    // Menu order
+    const [menuOrder, setMenuOrder] = useState<string[]>(config.menuOrder || []);
 
     // UI State
     const [newItemName, setNewItemName] = useState('');
@@ -90,6 +79,7 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
         setTicketSize(config.ticketSize || '58mm');
         setWebhookUrl(config.webhookUrl || '');
         setHiddenPanels(config.hiddenPanels || []);
+        setMenuOrder(config.menuOrder || []);
         setGpsLat(config.latitude ? String(config.latitude) : '13.706396');
         setGpsLng(config.longitude ? String(config.longitude) : '-89.146180');
         setGpsRadius(config.geofenceRadius ? String(config.geofenceRadius) : '10');
@@ -138,21 +128,22 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
     };
 
     const handleSave = async () => {
-        const success = await updateConfig({
-            salonName,
-            logoUrl,
-            ticketFooter,
-            ticketSize,
-            webhookUrl,
-            videoPlaylist,
-            tickerSpeed,
-            tickerMessage,
-            hiddenPanels,
-            latitude: parseFloat(gpsLat),
-            longitude: parseFloat(gpsLng),
-            geofenceRadius: parseInt(gpsRadius),
-            telegramBotToken: telegramToken,
-        });
+    const success = await updateConfig({
+        salonName,
+        logoUrl,
+        ticketFooter,
+        ticketSize,
+        webhookUrl,
+        videoPlaylist,
+        tickerSpeed,
+        tickerMessage,
+        hiddenPanels,
+        menuOrder,
+        latitude: parseFloat(gpsLat),
+        longitude: parseFloat(gpsLng),
+        geofenceRadius: parseInt(gpsRadius),
+        telegramBotToken: telegramToken,
+    });
         if (success) {
             if (logoUrl) updateFavicon(logoUrl);
         }
@@ -592,6 +583,79 @@ export const SettingsManager = ({ initialTab = 'master' }: { initialTab?: TabKey
                         </div>
                     </div>
                 )}
+
+                {activeTab === 'order' && (() => {
+                    const visiblePanels = allPanels.filter(p => !hiddenPanels.includes(p.id));
+                    const orderedPanels: any[] = [];
+                    const remainingPanels: any[] = [];
+                    if (menuOrder.length > 0) {
+                        visiblePanels.forEach(p => {
+                            const idx = menuOrder.indexOf(p.id);
+                            if (idx >= 0) orderedPanels[idx] = p;
+                            else remainingPanels.push(p);
+                        });
+                    }
+                    const displayList = (menuOrder.length > 0 ? orderedPanels.filter(Boolean).concat(remainingPanels) : visiblePanels);
+                    const move = (from: number, dir: number) => {
+                        const to = from + dir;
+                        if (to < 0 || to >= displayList.length) return;
+                        const ids = displayList.map(p => p.id);
+                        [ids[from], ids[to]] = [ids[to], ids[from]];
+                        setMenuOrder(ids);
+                    };
+                    return (
+                        <div className="max-w-3xl mx-auto">
+                            <div className="flex items-center gap-3 border-b border-rose-border pb-2 mb-4 sm:mb-6">
+                                <span className="text-[8px] sm:text-[9px] font-black text-rose-500 uppercase tracking-[0.3em]">Orden del Menú Principal</span>
+                                <span className="text-[7px] sm:text-[8px] font-black text-rose-400 uppercase ml-auto">{displayList.length} paneles</span>
+                            </div>
+                            <p className="text-[7px] sm:text-[8px] text-rose-400 font-bold uppercase tracking-wider mb-4 sm:mb-6 ml-1">
+                                Usa las flechas para subir o bajar la posición de cada módulo en el menú. Los paneles ocultos no se muestran.
+                            </p>
+
+                            <div className="bg-white rounded-xl sm:rounded-2xl border border-rose-border shadow-sm overflow-hidden">
+                                {displayList.map((panel, idx) => (
+                                    <div
+                                        key={panel.id}
+                                        className="flex items-center gap-3 p-3 sm:p-4 border-b border-rose-border/50 last:border-0"
+                                    >
+                                        <span className="w-6 h-6 rounded-lg bg-rose-muted flex items-center justify-center text-[9px] font-black text-rose-500 font-mono shrink-0">
+                                            {idx + 1}
+                                        </span>
+                                        <span className="text-base sm:text-lg shrink-0">{panel.icon}</span>
+                                        <span className="flex-1 text-[9px] sm:text-[10px] font-black uppercase tracking-tight text-rose-900">
+                                            {panel.label}
+                                        </span>
+                                        <div className="flex gap-1 shrink-0">
+                                            <button
+                                                type="button"
+                                                disabled={idx === 0}
+                                                onClick={() => move(idx, -1)}
+                                                className={`p-2 rounded-lg transition-all ${idx === 0 ? 'text-rose-200 cursor-not-allowed' : 'bg-rose-muted text-rose-500 hover:bg-rose-palo hover:text-white'}`}
+                                            >
+                                                <ArrowUp size={14} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={idx === displayList.length - 1}
+                                                onClick={() => move(idx, 1)}
+                                                className={`p-2 rounded-lg transition-all ${idx === displayList.length - 1 ? 'text-rose-200 cursor-not-allowed' : 'bg-rose-muted text-rose-500 hover:bg-rose-palo hover:text-white'}`}
+                                            >
+                                                <ArrowDown size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-rose-palo/10 border border-rose-palo/20 rounded-xl sm:rounded-2xl">
+                                <p className="text-[8px] sm:text-[9px] font-black text-rose-palo-dark uppercase tracking-widest leading-relaxed">
+                                    💡 El orden se guarda al presionar el botón Guardar. Si agregas un módulo nuevo, aparecerá al final automáticamente.
+                                </p>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
         </div>

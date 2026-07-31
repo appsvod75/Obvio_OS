@@ -43,6 +43,7 @@ function initSchema() {
       loyalty_redemption_value REAL DEFAULT 5.00,
       loyalty_referral_bonus REAL DEFAULT 2.00,
       hidden_panels TEXT DEFAULT '[]',
+      menu_order TEXT DEFAULT '[]',
       telegram_bot_token TEXT,
       latitude TEXT DEFAULT '13.706396',
       longitude TEXT DEFAULT '-89.146180',
@@ -307,6 +308,9 @@ function addMissingColumns() {
   const cols = db.prepare("PRAGMA table_info(app_config)").all().map(function(c) { return c.name; });
   if (!cols.includes('hidden_panels')) {
     db.prepare("ALTER TABLE app_config ADD COLUMN hidden_panels TEXT DEFAULT '[]'").run();
+  }
+  if (!cols.includes('menu_order')) {
+    db.prepare("ALTER TABLE app_config ADD COLUMN menu_order TEXT DEFAULT '[]'").run();
   }
   if (!cols.includes('latitude')) {
     db.prepare("ALTER TABLE app_config ADD COLUMN latitude REAL DEFAULT 0").run();

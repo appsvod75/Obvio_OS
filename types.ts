@@ -229,6 +229,7 @@ export interface AppConfig {
   webhookUrl?: string;
   contactEmail?: string;
   ticketSize?: '58mm' | '80mm';
+  menuOrder?: string[];
   ticketProductMap?: {
     C: string;
     B: string;

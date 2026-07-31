@@ -46,6 +46,10 @@ const menuButtons: MenuButtonConfig[] = [
   { label: 'Marcación', icon: <Clock className="text-rose-palo-dark" />, path: '/dashboard/checkin', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30', roles: ['estilista', 'reception', 'cashier', 'ventas_caja'] },
 ];
 
+export const ALL_PANELS = menuButtons
+  .map(btn => ({ id: pathToPanelId[btn.path], label: btn.label, icon: btn.icon }))
+  .filter(p => p.id);
+
 export function DashboardHome() {
   const navigate = useNavigate();
   const { currentUser } = useAuthStore();
@@ -62,6 +66,19 @@ export function DashboardHome() {
     return true;
   });
 
+  const menuOrder: string[] = (config as any)?.menuOrder || [];
+  const orderedButtons: MenuButtonConfig[] = [];
+  const remainingButtons: MenuButtonConfig[] = [];
+  if (menuOrder.length > 0) {
+    visibleButtons.forEach(btn => {
+      const panelId = pathToPanelId[btn.path];
+      const idx = menuOrder.indexOf(panelId);
+      if (idx >= 0) orderedButtons[idx] = btn;
+      else remainingButtons.push(btn);
+    });
+  }
+  const displayButtons = (menuOrder.length > 0 ? orderedButtons.filter(Boolean).concat(remainingButtons) : visibleButtons);
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full animate-in zoom-in duration-200 overflow-y-auto h-full">
       <h2 className="text-lg sm:text-xl lg:text-2xl font-light text-rose-500 mb-4 sm:mb-6">
@@ -69,7 +86,7 @@ export function DashboardHome() {
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 sm:gap-3 lg:gap-4 auto-rows-fr">
-        {visibleButtons.map((btn, i) => (
+        {displayButtons.map((btn, i) => (
           <button
             key={btn.path}
             onClick={() => navigate(btn.path)}

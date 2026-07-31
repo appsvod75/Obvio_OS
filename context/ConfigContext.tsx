@@ -40,6 +40,7 @@ export const ConfigProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
       },
       videoPlaylist: data.videoPlaylist || data.video_playlist || [],
       hiddenPanels: data.hiddenPanels || (data.hidden_panels ? (typeof data.hidden_panels === 'string' ? JSON.parse(data.hidden_panels) : data.hidden_panels) : []),
+      menuOrder: data.menuOrder || (data.menu_order ? (typeof data.menu_order === 'string' ? JSON.parse(data.menu_order) : data.menu_order) : []),
       latitude: data.latitude || data.lat || undefined,
       longitude: data.longitude || data.lng || undefined,
       geofenceRadius: parseInt(data.geofence_radius || data.geofenceRadius || 10),
