@@ -3,9 +3,14 @@ import { Sale } from '../types';
 
 const API_URL = '/api';
 
+export interface SaleResult {
+  sale: Sale;
+  stockWarnings: string[];
+}
+
 interface SalesContextType {
   sales: Sale[];
-  processSale: (sale: Sale) => Promise<Sale | null>;
+  processSale: (sale: Sale) => Promise<SaleResult | null>;
   sendInvoiceByEmail: (sale: Sale, clientName: string, email: string) => Promise<boolean>;
   setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
 }
@@ -15,18 +20,18 @@ const SalesContext = createContext<SalesContextType | undefined>(undefined);
 export const SalesProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [sales, setSales] = useState<Sale[]>([]);
 
-  const processSale = async (sale: Sale): Promise<Sale | null> => {
+  const processSale = async (sale: Sale): Promise<SaleResult | null> => {
     try {
       const res = await fetch(`${API_URL}/sales`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sale)
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setSales(prev => [...prev, sale]);
-        return sale;
+        return { sale, stockWarnings: data.stockWarnings || [] };
       } else {
-        const errData = await res.json().catch(() => ({}));
-        console.error("Error backend sale:", res.status, errData.error || res.statusText);
+        console.error("Error backend sale:", res.status, data.error || res.statusText);
         return null;
       }
     } catch (e) {

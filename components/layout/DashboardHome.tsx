@@ -5,7 +5,7 @@ import { useConfigStore } from '../../hooks/useConfigStore';
 import { usePermissions } from '../../hooks/usePermissions';
 import {
   Store, Users, BarChart3, Calendar, UserCog, Tag, Package,
-  Zap, Clock, DollarSign, Tv, Wrench, Settings, ShoppingCart,
+  Zap, Clock, DollarSign, Tv, Wrench, Settings, ShoppingCart, Search,
 } from 'lucide-react';
 
 const pathToPanelId: Record<string, string> = {
@@ -14,7 +14,7 @@ const pathToPanelId: Record<string, string> = {
   '/dashboard/inventory': 'inventory', '/dashboard/promotions': 'promotions', '/dashboard/branches': 'branches',
   '/dashboard/staff': 'staff', '/dashboard/sales': 'sales', '/dashboard/cash': 'cash_cut',
   '/dashboard/display': 'display', '/dashboard/settings/tv': 'settings_tv', '/dashboard/settings': 'settings_master',
-  '/dashboard/checkin': 'checkin',
+  '/dashboard/checkin': 'checkin', '/dashboard/lookup': 'lookup',
 };
 
 interface MenuButtonConfig {
@@ -42,6 +42,7 @@ const menuButtons: MenuButtonConfig[] = [
   { label: 'Pantalla TV', icon: <Tv className="text-rose-palo-dark" />, path: '/dashboard/display', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30' },
   { label: 'Ajustes TV', icon: <Wrench className="text-rose-palo-dark" />, path: '/dashboard/settings/tv', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30' },
   { label: 'Configuración', icon: <Settings className="text-rose-palo-dark" />, path: '/dashboard/settings', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30' },
+  { label: 'Consultar', icon: <Search className="text-rose-palo-dark" />, path: '/dashboard/lookup', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30', roles: ['superadmin', 'admin'] },
   { label: 'Marcación', icon: <Clock className="text-rose-palo-dark" />, path: '/dashboard/checkin', color: 'hover:bg-rose-palo/10 hover:border-rose-palo/30', roles: ['estilista', 'reception', 'cashier', 'ventas_caja'] },
 ];
 

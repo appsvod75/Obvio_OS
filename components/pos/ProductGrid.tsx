@@ -66,7 +66,7 @@ export function ProductGrid({
         <div className="space-y-6 pb-8">
           {['service', 'product', 'combo'].map((type) => {
             const items = catalog
-              .filter(item => item.type === type)
+              .filter(item => item.type === type && (type !== 'product' || item.sellable !== false))
               .sort((a, b) => a.name.localeCompare(b.name));
             if (items.length === 0) return null;
             const title = type === 'service' ? 'Servicios' : type === 'product' ? 'Productos' : 'Combos';

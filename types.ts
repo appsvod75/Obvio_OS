@@ -71,6 +71,17 @@ export interface CatalogItem {
   imageUrl?: string;
   sku?: string;
   comboDefinition?: string[];
+  isInsumo?: boolean;
+  sellable?: boolean;
+  minStock?: number;
+  recipe?: ServiceRecipe[];
+}
+
+export interface ServiceRecipe {
+  id: string;
+  serviceId: string;
+  itemId: string;
+  quantity: number;
 }
 
 export interface BranchStock {
@@ -117,6 +128,7 @@ export interface Sale {
   ticketId?: string;
   clientId?: string;
   barberId: string;
+  barberIds?: string[];
   items: SaleItem[];
   subtotal: number;
   discount: number;
@@ -247,6 +259,13 @@ export interface InventoryMovement {
 export interface Category {
   id: string;
   name: string;
+}
+
+export interface ServiceRecipeRow {
+  id: string;
+  service_id: string;
+  item_id: string;
+  quantity: number;
 }
 
 export interface Appointment {

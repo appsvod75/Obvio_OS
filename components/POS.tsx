@@ -123,9 +123,11 @@ export const POS = ({ navigateView }: POSProps) => {
 
       <CartSidebar
         cart={store.cart}
-        selectedBarber={store.selectedBarber}
+        selectedBarbers={store.selectedBarbers}
         barbers={store.barbers}
-        onBarberChange={store.setSelectedBarber}
+        onToggleBarber={store.toggleBarber}
+        showBarberModal={store.showBarberModal}
+        onToggleBarberModal={() => store.setShowBarberModal(!store.showBarberModal)}
         onRemoveFromCart={store.removeFromCart}
         onRemovePayment={store.removePayment}
         onClearCart={store.clearCart}
@@ -156,6 +158,7 @@ export const POS = ({ navigateView }: POSProps) => {
         currentSale={store.currentSale}
         config={store.config}
         catalog={catalog}
+        barbers={store.users}
         receiptEmail={store.receiptEmail}
         isSendingEmail={store.isSendingEmail}
         onCloseReceipt={() => store.setShowReceiptModal(false)}

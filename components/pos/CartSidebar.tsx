@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ShoppingCart, X, DollarSign, CreditCard, ArrowRightLeft, Bitcoin,
-  Plus, CheckCircle2, ChevronRight, Star, Scissors, Trash2,
+  Plus, CheckCircle2, ChevronRight, Star, Scissors, Trash2, Check, Users,
 } from 'lucide-react';
 import type { SaleItem, Payment, PaymentMethod, Ticket, Client, CatalogItem } from '../../types';
 import type { User } from '../../types';
@@ -9,9 +9,11 @@ import { useDragScroll } from '../../hooks/useDragScroll';
 
 interface CartSidebarProps {
   cart: SaleItem[];
-  selectedBarber: string;
+  selectedBarbers: string[];
   barbers: User[];
-  onBarberChange: (id: string) => void;
+  onToggleBarber: (id: string) => void;
+  showBarberModal: boolean;
+  onToggleBarberModal: () => void;
   onRemoveFromCart: (itemId: string) => void;
   onRemovePayment: (index: number) => void;
   onClearCart: () => void;
@@ -45,7 +47,7 @@ const paymentMethods: Partial<Record<PaymentMethod, string>> = {
 };
 
 export function CartSidebar({
-  cart, selectedBarber, barbers, onBarberChange,
+  cart, selectedBarbers, barbers, onToggleBarber, showBarberModal, onToggleBarberModal,
   onRemoveFromCart, onRemovePayment, onClearCart,
   payments, currentPaymentMethod, onPaymentMethodChange,
   amountInput, onAmountInputChange, onAddPayment, onCheckout,
@@ -112,20 +114,77 @@ export function CartSidebar({
 
       <div className="flex-none bg-white border-t border-rose-border p-3 sm:p-5 space-y-2 sm:space-y-3 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
         <div className="w-full">
-          <label className="text-[8px] sm:text-[9px] text-rose-400 font-black uppercase mb-1 block tracking-widest ml-1">ESTILISTA</label>
-          <select
-            value={selectedBarber}
-            onChange={(e) => onBarberChange(e.target.value)}
-            className={`w-full bg-white border text-rose-900 py-2 sm:py-3 px-3 sm:px-4 rounded-xl text-[10px] sm:text-xs font-black outline-none transition-all ${
+          <label className="text-[8px] sm:text-[9px] text-rose-400 font-black uppercase mb-1 block tracking-widest ml-1">ESTILISTA(S)</label>
+          <button
+            type="button"
+            onClick={onToggleBarberModal}
+            className={`w-full bg-white border text-rose-900 py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl text-[10px] sm:text-xs font-black outline-none transition-all flex items-center justify-between gap-2 ${
               errorMsg.includes('ESTILISTA') ? 'border-destructive' : 'border-rose-border focus:border-rose-palo'
             }`}
           >
-            <option value="" disabled hidden>SELECCIONAR ESTILISTA...</option>
-            {barbers.map(b => (
-              <option key={b.id} value={b.id} className="text-rose-900">{b.name.toUpperCase()}</option>
-            ))}
-          </select>
+            <span className="truncate">
+              {selectedBarbers.length > 0
+                ? selectedBarbers.map(id => barbers.find(b => b.id === id)?.name || '—').join(' + ')
+                : 'SELECCIONAR ESTILISTA...'}
+            </span>
+            <Users size={14} className="shrink-0 text-rose-400" />
+          </button>
+          {selectedBarbers.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {selectedBarbers.map(id => {
+                const barber = barbers.find(b => b.id === id);
+                return barber && (
+                  <span key={id} className="text-[7px] sm:text-[8px] font-black uppercase bg-rose-palo/15 text-rose-palo-dark px-2 py-0.5 rounded-full border border-rose-palo/30 flex items-center gap-1">
+                    <Check size={8} /> {barber.name.split(' ')[0]}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {showBarberModal && (
+          <div className="fixed inset-0 z-[600] bg-rose-bg/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onToggleBarberModal}>
+            <div className="bg-white border border-rose-border rounded-[1.5rem] shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b flex justify-between items-center bg-rose-muted/30">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-rose-palo/20 rounded-xl text-rose-palo-dark"><Users size={14} /></div>
+                  <h3 className="text-sm font-black text-rose-900 uppercase">Estilistas</h3>
+                </div>
+                <button onClick={onToggleBarberModal} className="p-1.5 bg-white rounded-lg text-rose-500 border"><X size={14} /></button>
+              </div>
+              <div className="p-3 grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+                {barbers.map(b => {
+                  const active = selectedBarbers.includes(b.id);
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => onToggleBarber(b.id)}
+                      className={`relative flex items-center gap-1.5 p-2.5 rounded-xl border transition-all text-left ${
+                        active
+                          ? 'bg-rose-palo/15 border-rose-palo/40 shadow-md'
+                          : 'bg-white border-rose-border hover:bg-rose-muted'
+                      }`}
+                    >
+                      {active && <CheckCircle2 size={12} className="absolute top-1 right-1 text-rose-palo-dark" />}
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${active ? 'bg-rose-palo text-white' : 'bg-rose-muted text-rose-400'}`}>
+                        <Scissors size={10} />
+                      </div>
+                      <span className="flex-1 text-[10px] font-black text-rose-900 uppercase truncate leading-tight">{b.name}</span>
+                    </button>
+                  );
+                })}
+                {barbers.length === 0 && <div className="col-span-2 text-center p-6 text-rose-400 text-[10px] font-black uppercase">Sin estilistas activos</div>}
+              </div>
+              <div className="p-3 border-t bg-rose-muted/20">
+                <button onClick={onToggleBarberModal} className="w-full bg-rose-palo hover:bg-rose-palo-dark text-white py-3 rounded-xl font-black uppercase text-[10px] transition-all active:scale-95 shadow-lg">
+                  Listo ({selectedBarbers.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-1 border-t border-rose-border/50 pt-2">
           <div className="flex justify-between text-rose-400 text-[8px] sm:text-[9px] font-black uppercase">

@@ -305,6 +305,13 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
   const [sku, setSku] = useState(initialData?.sku || (initialData as any)?.sku || '');
   const [comboItems, setComboItems] = useState<string[]>(initialData?.comboDefinition || []);
   const [comboSearch, setComboSearch] = useState('');
+  const [isInsumo, setIsInsumo] = useState(initialData?.isInsumo || false);
+  const [sellable, setSellable] = useState(initialData?.sellable !== false);
+  const [minStock, setMinStock] = useState(initialData?.minStock?.toString() || '0');
+  const [recipe, setRecipe] = useState<{ itemId: string; quantity: string }[]>(
+    (initialData?.recipe || []).map(r => ({ itemId: r.itemId, quantity: r.quantity.toString() }))
+  );
+  const [recipeSearch, setRecipeSearch] = useState('');
   const [showManageCategories, setShowManageCategories] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ oldName: string; newName: string } | null>(null);
   const handleSave = (e: React.FormEvent) => {
@@ -315,7 +322,7 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
     if (isCreatingCategory && newCategoryName.trim()) { finalCategory = newCategoryName.trim(); addCategory(finalCategory); }
     const catObj = categories.find((c: any) => c.name === finalCategory);
     if (catObj) finalCategoryId = catObj.id;
-    onSave({ id: initialData?.id || crypto.randomUUID(), name, price: parseFloat(price), type, category: finalCategory, categoryId: finalCategoryId, active: initialData ? initialData.active : true, cost: initialData?.cost || 0, etiqueta: parseFloat(etiqueta) || 0, sugerido: parseFloat(sugerido) || 0, imageUrl: imageUrl || undefined, sku: sku || undefined, comboDefinition: type === 'combo' ? comboItems : undefined }, !!initialData);
+    onSave({ id: initialData?.id || crypto.randomUUID(), name, price: parseFloat(price), type, category: finalCategory, categoryId: finalCategoryId, active: initialData ? initialData.active : true, cost: initialData?.cost || 0, etiqueta: parseFloat(etiqueta) || 0, sugerido: parseFloat(sugerido) || 0, imageUrl: imageUrl || undefined, sku: sku || undefined, isInsumo: type === 'product' ? isInsumo : false, sellable: type === 'product' ? sellable : true, minStock: type === 'product' ? parseFloat(minStock) || 0 : 0, comboDefinition: type === 'combo' ? comboItems : undefined, recipe: type === 'service' ? recipe.filter(r => r.itemId && parseFloat(r.quantity) > 0).map(r => ({ itemId: r.itemId, quantity: parseFloat(r.quantity) })) : undefined }, !!initialData);
   };
   const comboRealTotal = useMemo(() => comboItems.reduce((acc, curr) => { const item = fullCatalog.find((i: any) => i.id === curr); return acc + (item ? item.price : 0); }, 0), [comboItems, fullCatalog]);
   const savings = comboRealTotal - (parseFloat(price) || 0);
@@ -399,6 +406,22 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
                 )}
               </div>
             </div>
+            <div className="bg-rose-bg/50 border rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2 text-rose-500 mb-1"><Package size={12} /><span className="text-[9px] font-black uppercase">Clasificación</span></div>
+              <label className="flex items-center justify-between bg-white border rounded-xl p-3 cursor-pointer hover:border-rose-palo/50 transition-all">
+                <div><span className="text-[10px] font-black text-rose-900 uppercase block">Es insumo</span><span className="text-[8px] text-rose-400 font-bold uppercase">Se usa en recetas de servicios (ej: guantes, tintes)</span></div>
+                <input type="checkbox" checked={isInsumo} onChange={e => setIsInsumo(e.target.checked)} className="w-5 h-5 accent-pink-600" />
+              </label>
+              <label className="flex items-center justify-between bg-white border rounded-xl p-3 cursor-pointer hover:border-rose-palo/50 transition-all">
+                <div><span className="text-[10px] font-black text-rose-900 uppercase block">Se vende en POS</span><span className="text-[8px] text-rose-400 font-bold uppercase">Aparece como producto vendible</span></div>
+                <input type="checkbox" checked={sellable} onChange={e => setSellable(e.target.checked)} className="w-5 h-5 accent-pink-600" />
+              </label>
+              <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">Stock mínimo (alerta)</label>
+                <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-700 font-black text-lg font-mono">#</span>
+                  <input type="number" step="0.5" min="0" value={minStock} onChange={e => setMinStock(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-lg shadow-inner text-right" />
+                </div>
+              </div>
+            </div>
           </>
           ) : (
             <div><label className="text-[9px] font-black text-rose-500 uppercase block mb-1">{type === 'combo' ? 'Precio Oferta' : 'Precio PVP'}</label>
@@ -406,6 +429,21 @@ const ItemFormModal = ({ isOpen, onClose, initialData, categories, isCreatingCat
                 <input required type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-white border rounded-xl py-3 pl-10 pr-4 text-rose-900 outline-none focus:border-rose-palo font-mono font-black text-xl shadow-inner text-right" placeholder="0.00" />
               </div>
               {type === 'combo' && savings > 0 && <div className="mt-2 text-right"><span className="text-xs font-black text-emerald-400 uppercase bg-emerald-950/50 border border-emerald-900/50 px-3 py-1.5 rounded-lg inline-flex items-center gap-2 shadow-lg">Ahorro: ${savings.toFixed(2)} ({((savings / comboRealTotal) * 100).toFixed(0)}%)</span></div>}
+            </div>
+          )}
+          {type === 'service' && (
+            <div className="bg-rose-bg/50 border rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2 text-blue-500 mb-1"><Package size={12} /><span className="text-[9px] font-black uppercase">Receta (insumos que consume)</span></div>
+              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-400" size={10} />
+                <input value={recipeSearch} onChange={e => setRecipeSearch(e.target.value)} placeholder="Buscar insumos/productos..." className="w-full bg-white border rounded-xl py-2.5 pl-9 pr-3 text-[10px] text-rose-900 font-bold outline-none focus:border-rose-palo" />
+                {recipeSearch && (() => {
+                  const found = fullCatalog.filter((i: any) => i.id !== initialData?.id && i.type !== 'service' && i.isInsumo && !recipe.some(r => r.itemId === i.id) && (i.name.toLowerCase().includes(recipeSearch.toLowerCase()) || (i.category || '').toLowerCase().includes(recipeSearch.toLowerCase()))).slice(0, 5);
+                  return found.length > 0 ? (<div className="absolute top-full left-0 w-full mt-2 bg-white border rounded-xl shadow-2xl z-50">{found.map((i: any) => (<button key={i.id} type="button" onClick={() => { setRecipe([...recipe, { itemId: i.id, quantity: '1' }]); setRecipeSearch(''); }} className="w-full p-2.5 text-left hover:bg-rose-palo/20 border-b last:border-0 flex justify-between group"><span className="text-[9px] font-bold text-rose-900 uppercase">{i.name}</span><span className="text-[9px] font-mono text-rose-500">{i.isInsumo ? 'Insumo' : 'Producto'}</span></button>))}</div>) : null;
+                })()}
+              </div>
+              <div className="space-y-1 max-h-40 overflow-y-auto">{recipe.length === 0 && <div className="text-center p-2 text-[9px] text-rose-400 italic">Agrega los insumos que consume este servicio...</div>}
+                {recipe.map((r, idx) => { const it = fullCatalog.find((i: any) => i.id === r.itemId); if (!it) return null; return (<div key={idx} className="bg-white border p-1.5 rounded-lg flex justify-between items-center gap-2"><div className="flex items-center gap-2 min-w-0"><div className="w-5 h-5 rounded bg-rose-bg flex items-center justify-center text-rose-400 shrink-0"><Package size={8} /></div><span className="text-[9px] font-bold text-rose-900 uppercase truncate">{it.name}</span></div><div className="flex items-center gap-1 shrink-0"><input type="number" min="0" step="0.5" value={r.quantity} onChange={e => setRecipe(prev => prev.map((x, i2) => i2 === idx ? { ...x, quantity: e.target.value } : x))} className="w-16 border rounded-lg px-2 py-1 text-[10px] font-mono font-black text-rose-900 text-right outline-none focus:border-rose-palo" /><button type="button" onClick={() => setRecipe(prev => prev.filter((_, i2) => i2 !== idx))} className="text-rose-400 hover:text-destructive"><X size={10} /></button></div></div>); })}
+              </div>
             </div>
           )}
           <div className="pt-2 flex gap-3">

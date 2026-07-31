@@ -1,11 +1,12 @@
 import React from 'react';
 import { formatDateTimeES } from '../utils/dates';
-import { Sale, CatalogItem, AppConfig, PaymentMethod } from '../types';
+import { Sale, CatalogItem, AppConfig, PaymentMethod, User } from '../types';
 
 interface TicketContentProps {
     sale: Sale;
     config: AppConfig;
     catalog: CatalogItem[];
+    barbers?: User[];
 }
 
 const paymentMethods: Partial<Record<PaymentMethod, string>> = {
@@ -15,7 +16,10 @@ const paymentMethods: Partial<Record<PaymentMethod, string>> = {
     bitcoin: 'Bitcoin'
 };
 
-export const TicketContent: React.FC<TicketContentProps> = ({ sale, config, catalog }) => {
+export const TicketContent: React.FC<TicketContentProps> = ({ sale, config, catalog, barbers }) => {
+    const estilistas = (sale.barberIds && sale.barberIds.length > 0 ? sale.barberIds : (sale.barberId ? [sale.barberId] : []))
+        .map(id => barbers?.find(b => b.id === id)?.name || '')
+        .filter(Boolean);
     return (
         <div className="bg-white text-black p-[clamp(6px,1.8vmin,24px)] shadow-inner rounded-sm font-mono text-[clamp(7px,1.8vmin,11px)] leading-tight flex flex-col">
             {config.logoUrl && (
@@ -24,9 +28,14 @@ export const TicketContent: React.FC<TicketContentProps> = ({ sale, config, cata
                 </div>
             )}
             <div className="text-center font-black text-[clamp(9px,2.8vmin,18px)] mb-[clamp(2px,0.6vmin,8px)] uppercase tracking-tighter">{config.salonName}</div>
-            <div className="text-center text-[clamp(6px,1.4vmin,8px)] mb-[clamp(4px,1.2vmin,16px)] border-b border-black border-dashed pb-[clamp(2px,0.5vmin,8px)]">
+            <div className="text-center text-[clamp(6px,1.4vmin,8px)] mb-[clamp(2px,0.5vmin,8px)] border-b border-black border-dashed pb-[clamp(2px,0.5vmin,8px)]">
                 {formatDateTimeES(sale.timestamp)}
             </div>
+            {estilistas.length > 0 && (
+                <div className="text-center font-black text-[clamp(7px,1.6vmin,10px)] uppercase mb-[clamp(4px,1.2vmin,16px)] border-b border-black border-dashed pb-[clamp(2px,0.5vmin,8px)]">
+                    {estilistas.join(' + ')}
+                </div>
+            )}
 
             <div className="space-y-[clamp(2px,0.4vmin,6px)] mb-[clamp(6px,1.8vmin,16px)]">
                 {(sale.items || []).map((item, i) => {

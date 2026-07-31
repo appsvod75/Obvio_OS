@@ -1,12 +1,13 @@
 import React from 'react';
 import { X, Receipt, Printer, Mail, RefreshCw } from 'lucide-react';
 import { TicketContent } from '../TicketContent';
-import type { Sale, CatalogItem } from '../../types';
+import type { Sale, CatalogItem, User } from '../../types';
 
 interface Props {
   sale: Sale | null;
   config: any;
   catalog: CatalogItem[];
+  barbers?: User[];
   receiptEmail: string;
   isSendingEmail: boolean;
   onClose: () => void;
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export function ReceiptModal({ 
-  sale, config, catalog, receiptEmail, isSendingEmail, 
+  sale, config, catalog, barbers, receiptEmail, isSendingEmail, 
   onClose, onEmailChange, onSendEmail, onFinalize 
 }: Props) {
   if (!sale) return null;
@@ -37,7 +38,7 @@ export function ReceiptModal({
         </div>
 
         <div className="transform hover:scale-[1.02] transition-transform mb-[clamp(8px,2.5vmin,32px)] flex-1 overflow-hidden">
-          <TicketContent sale={sale} config={config} catalog={catalog} />
+          <TicketContent sale={sale} config={config} catalog={catalog} barbers={barbers} />
         </div>
 
         <div className="space-y-[clamp(4px,1.2vmin,16px)] no-print shrink-0">

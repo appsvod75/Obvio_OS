@@ -11,7 +11,7 @@ import { useBranch } from './BranchContext';
 import { useConfigCtx } from './ConfigContext';
 import { useInventory } from './InventoryContext';
 import { useTickets } from './TicketsContext';
-import { useSales } from './SalesContext';
+import { useSales, SaleResult } from './SalesContext';
 
 import { nowES } from '../utils/dates';
 
@@ -57,7 +57,7 @@ interface BarberContextType {
     addCategory: (name: string) => void;
     updateCategory: (oldName: string, newName: string) => void;
     removeCategory: (name: string) => void;
-    processSale: (sale: Sale) => Promise<Sale | null>;
+    processSale: (sale: Sale) => Promise<SaleResult | null>;
     sendInvoiceByEmail: (sale: Sale, clientName: string, email: string) => Promise<boolean>;
     getBranchStock: (branchId: string, itemId: string) => BranchStock | undefined;
     registerInventoryMovement: (branchId: string, itemId: string, type: InventoryMovementType, quantity: number, cost?: number, reason?: string, status?: 'pending' | 'completed') => Promise<boolean>;
@@ -225,6 +225,11 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                     registrationBranchId: c.registration_branch_id ? String(c.registration_branch_id) : null
                 }));
 
+                const serviceRecipes = (data.serviceRecipes || []).map((r: any) => ({
+                    id: String(r.id), serviceId: String(r.service_id), itemId: String(r.item_id),
+                    quantity: parseFloat(r.quantity || 1)
+                }));
+
                 const normalizedCatalog = (data.catalog || []).map((item: any) => ({
                     id: String(item.id), name: item.name, type: item.type, price: parseFloat(item.price),
                     category: item.category,
@@ -235,7 +240,11 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                     sku: item.sku || undefined,
                     etiqueta: item.etiqueta ? parseFloat(item.etiqueta) : undefined,
                     sugerido: item.sugerido ? parseFloat(item.sugerido) : undefined,
-                    comboDefinition: typeof item.combo_definition === 'string' ? JSON.parse(item.combo_definition) : item.combo_definition
+                    isInsumo: item.is_insumo === 1 || item.isInsumo === true,
+                    sellable: item.sellable === 0 ? false : (item.sellable === 1 || item.sellable === undefined),
+                    minStock: parseFloat(item.min_stock || 0),
+                    comboDefinition: typeof item.combo_definition === 'string' ? JSON.parse(item.combo_definition) : item.combo_definition,
+                    recipe: serviceRecipes.filter(r => r.serviceId === String(item.id))
                 }));
 
                 const normalizedStocks = (data.stocks || []).map((s: any) => ({
@@ -347,6 +356,16 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                                 ticketId: s.ticket_id,
                                 clientId: s.client_id ? String(s.client_id) : null,
                                 barberId: s.barber_id ? String(s.barber_id) : null,
+                                barberIds: (() => {
+                                    try {
+                                        if (Array.isArray(s.barbers)) return s.barbers.map(String);
+                                        if (typeof s.barbers === 'string') {
+                                            const parsed = JSON.parse(s.barbers);
+                                            return Array.isArray(parsed) ? parsed.map(String) : [];
+                                        }
+                                        return s.barber_id ? [String(s.barber_id)] : [];
+                                    } catch (e) { return []; }
+                                })(),
                                 timestamp: s.timestamp,
                                 total: parseFloat(s.total || 0),
                                 subtotal: parseFloat(s.subtotal || 0),
@@ -532,6 +551,8 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
         if (sale.ticketId) setTickets(prev => prev.filter(t => t.id !== sale.ticketId));
 
+        const stockWarnings = result.stockWarnings || [];
+
         setStocks(prevStocks => {
             let updatedStocks = [...prevStocks];
             (sale.items || []).forEach(item => {
@@ -547,6 +568,8 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
                 if (catalogItem.type === 'product') {
                     deductStock(item.itemId, item.quantity);
+                } else if (catalogItem.type === 'service' && catalogItem.recipe) {
+                    catalogItem.recipe.forEach(r => deductStock(r.itemId, r.quantity * item.quantity));
                 } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
                     (catalogItem.comboDefinition as string[]).forEach(subId => {
                         const subItem = catalog.find(ci => ci.id === subId);
@@ -563,14 +586,14 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
                 const catalogItem = catalog.find(ci => ci.id === item.itemId);
                 if (!catalogItem) return;
 
-                const createMov = (itmId: string, name: string, qty: number) => {
+                const createMov = (itmId: string, name: string, qty: number, cost?: number) => {
                     const currentStock = stocks.find(s => s.branchId === sale.branchId && s.itemId === itmId);
                     const prevStock = currentStock?.stock || 0;
                     return {
                         id: Math.random().toString(36).substring(2, 15),
                         branchId: sale.branchId, itemId: itmId, itemName: name,
                         type: 'sale' as InventoryMovementType, quantity: qty,
-                        unitCost: catalogItem.cost || 0,
+                        unitCost: cost !== undefined ? cost : (catalogItem.cost || 0),
                         previousStock: prevStock, newStock: prevStock - qty,
                         date: nowES(),
                         reason: `Venta POS #${sale.ticketId || 'POS'}`,
@@ -580,6 +603,11 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
 
                 if (catalogItem.type === 'product') {
                     newMovs.push(createMov(item.itemId, item.name, item.quantity));
+                } else if (catalogItem.type === 'service' && catalogItem.recipe) {
+                    catalogItem.recipe.forEach(r => {
+                        const recipeItem = catalog.find(ci => ci.id === r.itemId);
+                        newMovs.push(createMov(r.itemId, recipeItem?.name || r.itemId, r.quantity * item.quantity, recipeItem?.cost || 0));
+                    });
                 } else if (catalogItem.type === 'combo' && catalogItem.comboDefinition) {
                     (catalogItem.comboDefinition as string[]).forEach(subId => {
                         const subItem = catalog.find(ci => ci.id === subId);
@@ -601,7 +629,11 @@ export const BarberProvider: React.FC<PropsWithChildren<{}>> = ({ children }) =>
             }));
         }
 
-        return sale;
+        if (stockWarnings.length > 0) {
+            showToast('warning', 'Stock insuficiente', stockWarnings.join(' · '));
+        }
+
+        return result;
     };
 
     const checkCashSession = async (branchId: string, date?: string) => {

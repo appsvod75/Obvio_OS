@@ -187,7 +187,9 @@ export const SalesHistory = ({ navigateView, hideSummary = false }: SalesHistory
                                 ) : (
                                     filteredSales.map(sale => {
                                         const client = clients.find(c => c.id === sale.clientId);
-                                        const barber = users.find(u => u.id === sale.barberId);
+                                        const barberIds = (sale.barberIds && sale.barberIds.length > 0 ? sale.barberIds : (sale.barberId ? [sale.barberId] : []));
+                                        const barberNames = barberIds.map(id => users.find(u => u.id === id)?.name || '').filter(Boolean);
+                                        const barberLabel = barberNames.length > 0 ? barberNames.join(' + ') : '---';
                                         return (
                                             <tr key={sale.id} className="hover:bg-rose-muted transition-colors group">
                                                 <td className="p-[clamp(4px,1vmin,20px)] text-rose-500 font-mono text-[clamp(7px,1.2vmin,10px)]">
@@ -199,7 +201,7 @@ export const SalesHistory = ({ navigateView, hideSummary = false }: SalesHistory
                                                     <div className="text-[clamp(6px,1vmin,8px)] font-black text-rose-400 uppercase tracking-widest mt-[clamp(1px,0.3vmin,2px)]">Folio: #{(sale.id || '').split('-').slice(0,2).join('').toUpperCase()}</div>
                                                 </td>
                                                 <td className="p-[clamp(4px,1vmin,20px)] hidden sm:table-cell">
-                                                    <span className="text-[clamp(7px,1.2vmin,10px)] text-rose-500 font-black uppercase bg-white px-[clamp(4px,1vmin,8px)] py-[clamp(1px,0.3vmin,4px)] rounded border border-rose-border">{barber?.name || '---'}</span>
+                                                    <span className="text-[clamp(7px,1.2vmin,10px)] text-rose-500 font-black uppercase bg-white px-[clamp(4px,1vmin,8px)] py-[clamp(1px,0.3vmin,4px)] rounded border border-rose-border">{barberLabel}</span>
                                                 </td>
                                                 <td className="p-[clamp(4px,1vmin,20px)] hidden md:table-cell">
                                                     <div className="text-[clamp(7px,1.2vmin,9px)] text-rose-500 truncate max-w-[clamp(60px,15vmin,200px)] uppercase font-bold leading-relaxed">{(sale.items || []).map(i => `${i.quantity || 1}x ${i.name || 'Item'}`).join(', ')}</div>

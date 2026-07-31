@@ -242,6 +242,20 @@ export const InventoryManager = () => {
 
     const selectedItem = useMemo(() => catalog.find(p => p.id === selectedId) || null, [catalog, selectedId]);
 
+    const lowStockAlerts = useMemo(() => {
+        const low: { item: CatalogItem; totalStock: number }[] = [];
+        for (const item of catalog) {
+            if (item.type !== 'product' || item.active === false) continue;
+            const min = item.minStock || 0;
+            if (min <= 0) continue;
+            const total = stocks.filter(s => s.itemId === item.id).reduce((acc, s) => acc + s.stock, 0);
+            if (total <= min) low.push({ item, totalStock: total });
+        }
+        const insumos = low.filter(l => l.item.isInsumo).sort((a, b) => (a.totalStock - b.totalStock));
+        const productos = low.filter(l => !l.item.isInsumo).sort((a, b) => (a.totalStock - b.totalStock));
+        return { insumos, productos, total: low.length };
+    }, [catalog, stocks]);
+
     return (
         <div className="h-full flex flex-col bg-rose-bg overflow-hidden font-inter">
             {/* HEADER DE MÓDULO */}
@@ -274,6 +288,32 @@ export const InventoryManager = () => {
                         <StatHeaderCard icon={<Package size={14} className="text-amber-500" />} label="Existencia Total" value={stats.totalStock.toString()} sub="Unidades en Red" color="text-amber-500" />
                         <StatHeaderCard icon={<Coins size={14} className="text-emerald-500" />} label="Inversión Total" value={`$${stats.totalInvestment.toFixed(2)}`} sub="Valor de Inventario" color="text-emerald-500" />
                     </div>
+
+                    {lowStockAlerts.total > 0 && (
+                        <div className="px-[clamp(8px,2vmin,24px)] py-[clamp(6px,1.5vmin,14px)] bg-rose-bg shrink-0 border-b border-rose-border space-y-[clamp(4px,1vmin,10px)]">
+                            <div className="flex items-center gap-2 text-destructive font-black uppercase tracking-widest text-[clamp(8px,1.5vmin,10px)]"><Bell size={14} /> Alertas de Stock Bajo ({lowStockAlerts.total})</div>
+                            {lowStockAlerts.insumos.length > 0 && (
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-[clamp(8px,2vmin,14px)] p-[clamp(4px,1vmin,8px)]">
+                                    <div className="text-[clamp(7px,1.2vmin,8px)] font-black text-amber-600 uppercase tracking-widest mb-[clamp(2px,0.5vmin,4px)]">Insumos bajos</div>
+                                    <div className="flex flex-wrap gap-[clamp(4px,1vmin,8px)]">{lowStockAlerts.insumos.map(l => (
+                                        <span key={l.item.id} className="bg-white border border-amber-500/30 rounded-lg px-2 py-1 text-[clamp(7px,1.2vmin,8px)] font-bold text-rose-900 uppercase flex items-center gap-1">
+                                            <Package size={8} className="text-amber-500" /> {l.item.name} <span className="font-mono text-amber-600">({l.totalStock}un)</span>
+                                        </span>
+                                    ))}</div>
+                                </div>
+                            )}
+                            {lowStockAlerts.productos.length > 0 && (
+                                <div className="bg-destructive/10 border border-destructive/20 rounded-[clamp(8px,2vmin,14px)] p-[clamp(4px,1vmin,8px)]">
+                                    <div className="text-[clamp(7px,1.2vmin,8px)] font-black text-destructive uppercase tracking-widest mb-[clamp(2px,0.5vmin,4px)]">Productos bajos</div>
+                                    <div className="flex flex-wrap gap-[clamp(4px,1vmin,8px)]">{lowStockAlerts.productos.map(l => (
+                                        <span key={l.item.id} className="bg-white border border-destructive/30 rounded-lg px-2 py-1 text-[clamp(7px,1.2vmin,8px)] font-bold text-rose-900 uppercase flex items-center gap-1">
+                                            <Package size={8} className="text-destructive" /> {l.item.name} <span className="font-mono text-destructive">({l.totalStock}un)</span>
+                                        </span>
+                                    ))}</div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex-1 p-[clamp(8px,2vmin,24px)] min-h-0">
                         <div

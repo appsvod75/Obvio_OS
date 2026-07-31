@@ -47,10 +47,11 @@ app.get('/api/sync', (req, res) => {
     const users = db().prepare("SELECT * FROM users").all();
     const clients = db().prepare("SELECT * FROM clients").all();
     const catalog = db().prepare(`
-      SELECT c.id, c.name, c.type, c.price, c.category_id, c.active, c.cost, c.etiqueta, c.sugerido, c.image_url as imageUrl, c.sku, c.combo_definition, cat.name as category
+      SELECT c.id, c.name, c.type, c.price, c.category_id, c.active, c.cost, c.etiqueta, c.sugerido, c.image_url as imageUrl, c.sku, c.combo_definition, c.is_insumo as isInsumo, c.sellable, c.min_stock as minStock, cat.name as category
       FROM catalog c 
       LEFT JOIN categories cat ON c.category_id = cat.id
     `).all();
+    const serviceRecipes = db().prepare("SELECT * FROM service_recipes").all();
     const stocks = db().prepare("SELECT * FROM branch_stock").all();
     const plans = db().prepare("SELECT * FROM monthly_plans").all();
     const playlist = db().prepare("SELECT * FROM video_playlist ORDER BY sort_order").all();
@@ -80,7 +81,7 @@ app.get('/api/sync', (req, res) => {
     }));
 
     res.json({
-      branches, users, clients, catalog, stocks,
+      branches, users, clients, catalog, serviceRecipes, stocks,
       monthlyPlans: plans,
       videoPlaylist: playlist,
       categories: categories,
@@ -146,11 +147,15 @@ app.put('/api/tickets/:id/status', (req, res) => {
 
 app.post('/api/sales', (req, res) => {
   const s = req.body;
+  const stockWarnings = [];
   try {
     const tx = db().transaction(() => {
+      const barberIds = Array.isArray(s.barberIds) && s.barberIds.length > 0
+        ? s.barberIds
+        : (s.barberId ? [s.barberId] : []);
       db().prepare(
-        "INSERT INTO sales (id, branch_id, ticket_id, client_id, barber_id, subtotal, discount, total, timestamp, points_earned, points_used, applied_promotion_id) VALUES (?,?,?,?,?,?,?,?,datetime('now', 'localtime'),?,?,?)"
-      ).run(s.id, s.branchId, s.ticketId, s.clientId, s.barberId, s.subtotal, s.discount, s.total, s.pointsEarned || 0, s.pointsUsed || 0, s.appliedPromotionId);
+        "INSERT INTO sales (id, branch_id, ticket_id, client_id, barber_id, subtotal, discount, total, barbers, timestamp, points_earned, points_used, applied_promotion_id) VALUES (?,?,?,?,?,?,?,?,?,datetime('now', 'localtime'),?,?,?)"
+      ).run(s.id, s.branchId, s.ticketId, s.clientId, barberIds[0] || null, s.subtotal, s.discount, s.total, JSON.stringify(barberIds), s.pointsEarned || 0, s.pointsUsed || 0, s.appliedPromotionId);
 
       for (const item of s.items) {
         db().prepare(
@@ -160,12 +165,19 @@ app.post('/api/sales', (req, res) => {
         const catalogItem = db().prepare("SELECT type, combo_definition FROM catalog WHERE id = ?").get(item.itemId);
         if (catalogItem) {
           const deductStock = (itmId, qtyToDeduct) => {
+            const stockRes = db().prepare("SELECT stock FROM branch_stock WHERE branch_id = ? AND item_id = ?").get(s.branchId, itmId);
+            const currentStock = stockRes ? stockRes.stock : 0;
+
+            if (currentStock < qtyToDeduct) {
+              const itmInfo = db().prepare("SELECT name FROM catalog WHERE id = ?").get(itmId);
+              stockWarnings.push(`${itmInfo ? itmInfo.name : itmId} (solo hay ${currentStock}, se necesitan ${qtyToDeduct})`);
+            }
+
             db().prepare(
               "UPDATE branch_stock SET stock = stock - ? WHERE branch_id = ? AND item_id = ?"
             ).run(qtyToDeduct, s.branchId, itmId);
 
-            const stockRes = db().prepare("SELECT stock FROM branch_stock WHERE branch_id = ? AND item_id = ?").get(s.branchId, itmId);
-            const finalStock = stockRes ? stockRes.stock : 0;
+            const finalStock = stockRes ? stockRes.stock - qtyToDeduct : -qtyToDeduct;
             const movId = crypto.randomUUID();
 
             db().prepare(
@@ -175,6 +187,11 @@ app.post('/api/sales', (req, res) => {
 
           if (catalogItem.type === 'product') {
             deductStock(item.itemId, item.quantity);
+          } else if (catalogItem.type === 'service') {
+            const recipeRows = db().prepare("SELECT * FROM service_recipes WHERE service_id = ?").all(item.itemId);
+            for (const r of recipeRows) {
+              deductStock(r.item_id, r.quantity * item.quantity);
+            }
           } else if (catalogItem.type === 'combo') {
             let comboIds = [];
             try {
@@ -212,7 +229,7 @@ app.post('/api/sales', (req, res) => {
 
     tx();
     io.emit('sync_needed', { reason: 'sales' });
-    res.json({ success: true });
+    res.json({ success: true, stockWarnings });
   } catch (e) {
     console.error("Critical Sale Error:", e);
     res.status(500).json({ error: e.message });
@@ -379,7 +396,8 @@ app.post('/api/catalog', (req, res) => {
         catId = newId;
       }
     }
-    db().prepare("INSERT INTO catalog (id, name, type, price, category_id, active, cost, etiqueta, sugerido, image_url, sku, combo_definition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").run(i.id, i.name, i.type, i.price, catId, 1, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition));
+    db().prepare("INSERT INTO catalog (id, name, type, price, category_id, active, cost, etiqueta, sugerido, image_url, sku, combo_definition, is_insumo, sellable, min_stock) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").run(i.id, i.name, i.type, i.price, catId, 1, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition), i.isInsumo ? 1 : 0, i.sellable === false ? 0 : 1, i.minStock || 0);
+    saveRecipe(i);
     io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -399,11 +417,23 @@ app.put('/api/catalog/:id', (req, res) => {
         catId = newId;
       }
     }
-    db().prepare("UPDATE catalog SET name=?, type=?, price=?, category_id=?, active=?, cost=?, etiqueta=?, sugerido=?, image_url=?, sku=?, combo_definition=? WHERE id=?").run(i.name, i.type, i.price, catId, i.active ? 1 : 0, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition), id);
+    db().prepare("UPDATE catalog SET name=?, type=?, price=?, category_id=?, active=?, cost=?, etiqueta=?, sugerido=?, image_url=?, sku=?, combo_definition=?, is_insumo=?, sellable=?, min_stock=? WHERE id=?").run(i.name, i.type, i.price, catId, i.active ? 1 : 0, i.cost || 0, i.etiqueta || 0, i.sugerido || 0, i.imageUrl || null, i.sku || null, JSON.stringify(i.comboDefinition), i.isInsumo ? 1 : 0, i.sellable === false ? 0 : 1, i.minStock || 0, id);
+    saveRecipe(i);
     io.emit('sync_needed', { reason: 'catalog' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+function saveRecipe(i) {
+  if (i.type === 'service' && Array.isArray(i.recipe) && i.recipe.length > 0) {
+    db().prepare("DELETE FROM service_recipes WHERE service_id = ?").run(i.id);
+    for (const r of i.recipe) {
+      db().prepare("INSERT INTO service_recipes (id, service_id, item_id, quantity) VALUES (?,?,?,?)").run(crypto.randomUUID(), i.id, r.itemId, r.quantity || 1);
+    }
+  } else if (i.type === 'service') {
+    db().prepare("DELETE FROM service_recipes WHERE service_id = ?").run(i.id);
+  }
+}
 
 app.delete('/api/catalog/:id', (req, res) => {
   const { id } = req.params;

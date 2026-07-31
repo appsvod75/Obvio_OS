@@ -19,6 +19,7 @@ import { PromotionManager } from '../PromotionManager';
 import { ReportingDashboard } from '../ReportingDashboard';
 import { BarberDashboard } from '../BarberDashboard';
 import { CheckInView } from '../CheckInView';
+import { ConsultarProducto } from '../ConsultarProducto';
 import { MainLayout } from './MainLayout';
 import { useNavigateView } from './ViewWrapper';
 
@@ -121,6 +122,7 @@ export function AppRoutes() {
           <Route path="/dashboard/promotions" element={<PromotionManager />} />
           <Route path="/dashboard/reports" element={<ReportingDashboard />} />
           <Route path="/dashboard/barber" element={<BarberDashboard />} />
+          <Route path="/dashboard/lookup" element={<ConsultarProducto />} />
           <Route path="/dashboard/settings/tv" element={<SettingsTVPage />} />
           <Route path="/dashboard/settings" element={<SettingsMasterPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

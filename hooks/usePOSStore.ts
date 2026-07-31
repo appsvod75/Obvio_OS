@@ -19,7 +19,8 @@ export function usePOSStore(branchOverride?: string) {
   const currentBranch = useMemo(() => branches.find(b => b.id === currentBranchId), [branches, currentBranchId]);
 
   const [cart, setCart] = useState<SaleItem[]>([]);
-  const [selectedBarber, setSelectedBarber] = useState<string>(currentUser?.role === 'estilista' ? currentUser.id : '');
+  const [selectedBarbers, setSelectedBarbers] = useState<string[]>(currentUser?.role === 'estilista' ? [currentUser.id] : []);
+  const [showBarberModal, setShowBarberModal] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [posMode, setPosMode] = useState<'ticket' | 'direct'>(() => {
@@ -238,7 +239,7 @@ export function usePOSStore(branchOverride?: string) {
     setUsePoints(false);
     const t = tickets.find(tick => tick.id === ticketId);
     if (t) {
-      if (t.barberId) setSelectedBarber(t.barberId);
+      if (t.barberId) setSelectedBarbers([t.barberId]);
       const map = config.ticketProductMap;
       const getSI = (id: string) => {
         const m = catalog.find(i => i.id === id);
@@ -269,10 +270,16 @@ export function usePOSStore(branchOverride?: string) {
     setErrorMsg('');
   }, [amountInput, remainingBalance, payments, currentPaymentMethod]);
 
+  const toggleBarber = useCallback((barberId: string) => {
+    setSelectedBarbers(prev => prev.includes(barberId)
+      ? prev.filter(b => b !== barberId)
+      : [...prev, barberId]);
+  }, []);
+
   const handleCheckout = useCallback(async () => {
-    console.log("handleCheckout called, cart:", cart.length, "barber:", selectedBarber, "paid:", totalPaid, "total:", rawTotal);
+    console.log("handleCheckout called, cart:", cart.length, "barbers:", selectedBarbers, "paid:", totalPaid, "total:", rawTotal);
     if (cart.length === 0) { showToast('warning', 'Carrito vacío', 'Agrega productos para continuar'); return; }
-    if (!selectedBarber) { showToast('error', 'Falta Estilista', 'Debes seleccionar un estilista'); return; }
+    if (selectedBarbers.length === 0) { showToast('error', 'Falta Estilista', 'Debes seleccionar al menos un estilista'); return; }
     if (posMode === 'direct' && !activeClientId) { showToast('error', 'Falta Cliente', 'Debes seleccionar un cliente'); return; }
     if (totalPaid < rawTotal - 0.01) { showToast('warning', 'Pago incompleto', 'El monto recibido es menor al total'); return; }
 
@@ -281,7 +288,7 @@ export function usePOSStore(branchOverride?: string) {
     const sale: Sale = {
       id: crypto.randomUUID(), branchId: currentBranchId || '',
       ticketId: posMode === 'ticket' ? selectedTicket : undefined,
-      clientId: activeClientId || null, barberId: selectedBarber || null,
+      clientId: activeClientId || null, barberId: selectedBarbers[0] || null, barberIds: selectedBarbers,
       items: cart, subtotal, discount: totalDiscount, total: rawTotal,
       payments: [...payments], timestamp: nowES(),
       appliedPromotionId: activePromotion?.id,
@@ -290,16 +297,16 @@ export function usePOSStore(branchOverride?: string) {
     };
 
     console.log("Calling processSale...");
-    const finalSale = await processSale(sale);
-    console.log("processSale returned:", finalSale);
-    if (finalSale) {
+    const result = await processSale(sale);
+    console.log("processSale returned:", result);
+    if (result) {
       console.log("Setting currentSale and showReceiptModal");
-      setCurrentSale(finalSale);
+      setCurrentSale(result.sale);
       setShowReceiptModal(true);
     } else {
       setErrorMsg("❌ Error al procesar venta");
     }
-  }, [cart, selectedBarber, totalPaid, rawTotal, activeClientId, config, currentBranchId, posMode, selectedTicket, activePromotion, usePoints, payments, subtotal, totalDiscount, processSale, currentUser]);
+  }, [cart, selectedBarbers, totalPaid, rawTotal, activeClientId, config, currentBranchId, posMode, selectedTicket, activePromotion, usePoints, payments, subtotal, totalDiscount, processSale, currentUser]);
 
   const handleSendEmail = useCallback(async () => {
     if (!receiptEmail || !currentSale) return;
@@ -322,7 +329,7 @@ export function usePOSStore(branchOverride?: string) {
     setSelectedDirectClient('');
     setClientSearch('');
     setUsePoints(false);
-    setSelectedBarber(currentUser?.role === 'estilista' ? currentUser.id : '');
+    setSelectedBarbers(currentUser?.role === 'estilista' ? [currentUser.id] : []);
   }, [clearCart, currentUser]);
 
   const handleAddAndSelectClient = useCallback((e: React.FormEvent) => {
@@ -348,7 +355,7 @@ export function usePOSStore(branchOverride?: string) {
 
   return {
     currentBranchId, currentBranch, selectedBranchId, setSelectedBranchId,
-    cart, setCart, removePayment, selectedBarber, setSelectedBarber,
+    cart, setCart, removePayment, selectedBarbers, setSelectedBarbers, showBarberModal, setShowBarberModal, toggleBarber,
     catalogSearch, setCatalogSearch, currentTime,
     posMode, setPosMode,
     selectedDirectClient, setSelectedDirectClient,

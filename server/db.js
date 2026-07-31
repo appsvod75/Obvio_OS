@@ -151,7 +151,20 @@ function initSchema() {
       image_url TEXT,
       sku TEXT,
       combo_definition TEXT,
+      is_insumo INTEGER DEFAULT 0,
+      sellable INTEGER DEFAULT 1,
+      min_stock REAL DEFAULT 0,
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS service_recipes (
+      id TEXT PRIMARY KEY,
+      service_id TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      quantity REAL NOT NULL DEFAULT 1,
+      FOREIGN KEY (service_id) REFERENCES catalog(id) ON DELETE CASCADE,
+      FOREIGN KEY (item_id) REFERENCES catalog(id) ON DELETE CASCADE,
+      UNIQUE(service_id, item_id)
     );
 
     CREATE TABLE IF NOT EXISTS branch_stock (
@@ -192,6 +205,7 @@ function initSchema() {
       subtotal REAL NOT NULL,
       discount REAL DEFAULT 0.00,
       total REAL NOT NULL,
+      barbers TEXT,
       timestamp TEXT DEFAULT (datetime('now')),
       points_earned INTEGER DEFAULT 0,
       points_used INTEGER DEFAULT 0,
@@ -315,6 +329,20 @@ function addMissingColumns() {
   if (!catalogCols.includes('sku')) {
     db.prepare("ALTER TABLE catalog ADD COLUMN sku TEXT").run();
   }
+  if (!catalogCols.includes('is_insumo')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN is_insumo INTEGER DEFAULT 0").run();
+  }
+  if (!catalogCols.includes('sellable')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN sellable INTEGER DEFAULT 1").run();
+  }
+  if (!catalogCols.includes('min_stock')) {
+    db.prepare("ALTER TABLE catalog ADD COLUMN min_stock REAL DEFAULT 0").run();
+  }
+  const salesCols = db.prepare("PRAGMA table_info(sales)").all().map(function(c) { return c.name; });
+  if (!salesCols.includes('barbers')) {
+    db.prepare("ALTER TABLE sales ADD COLUMN barbers TEXT").run();
+  }
+  db.prepare("CREATE TABLE IF NOT EXISTS service_recipes (id TEXT PRIMARY KEY, service_id TEXT NOT NULL, item_id TEXT NOT NULL, quantity REAL NOT NULL DEFAULT 1, FOREIGN KEY (service_id) REFERENCES catalog(id) ON DELETE CASCADE, FOREIGN KEY (item_id) REFERENCES catalog(id) ON DELETE CASCADE, UNIQUE(service_id, item_id))").run();
   db.prepare("PRAGMA wal_checkpoint(TRUNCATE)").run();
 }
 

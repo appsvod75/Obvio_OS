@@ -2,13 +2,14 @@ import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, DollarSign, UserPlus, Search, ChevronRight, Package } from 'lucide-react';
 import { ReceiptModal } from './ReceiptModal';
-import type { Sale, CatalogItem } from '../../types';
+import type { Sale, CatalogItem, User } from '../../types';
 
 interface POSModalsProps {
   showReceiptModal: boolean;
   currentSale: Sale | null;
   config: any;
   catalog: CatalogItem[];
+  barbers?: User[];
   receiptEmail: string;
   isSendingEmail: boolean;
   onCloseReceipt: () => void;
@@ -179,7 +180,7 @@ function OpenSessionModal({ openingAmount, onAmountChange, onSubmit, onClose }: 
 }
 
 export function POSModals({
-  showReceiptModal, currentSale, config, catalog,
+  showReceiptModal, currentSale, config, catalog, barbers,
   receiptEmail, isSendingEmail,
   onCloseReceipt, onFinalizeReceipt, onPrintReceipt,
   onEmailChange, onSendEmail,
@@ -222,6 +223,7 @@ export function POSModals({
       {showSaleModal && displaySale && (
         <ReceiptModal
           sale={displaySale}
+          barbers={barbers}
           config={config}
           catalog={catalog}
           receiptEmail={receiptEmail}
