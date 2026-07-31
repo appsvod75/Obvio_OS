@@ -299,7 +299,24 @@ Se usa `clamp(min, vmin, max)` para escalar proporcional:
 
 ---
 
-> **Nota**: Estas tres features están en fase de idea. Se requiere reunión con el admin para definir alcance y prioridad antes de implementar.
+### 4. Comisiones por Estilista (Configurable)
+**Objetivo**: El admin paga comisión según ventas de cada estilista.
+
+**Requerimientos:**
+- **Tabla de comisiones configurable** por rangos de venta (no quemada):
+  - Ej: hasta $300 → 7%, más de $300 → 10%, más de $500 → 12% (la admin puede agregar/editar reglas)
+- **Reporte de comisiones**:
+  - El admin selecciona **rango de fechas** + **estilista**
+  - Se calcula la comisión en base a la tabla establecida para las ventas del período
+- **Ventas compartidas**: si 2 o 3 estilistas trabajaron en una misma factura, el valor de esa venta se **divide entre los estilistas** y cada uno suma su parte
+  - (Esto ya es posible porque las ventas guardan `barberIds`)
+- Idealmente un icono "Comisiones" en el menú principal
+
+**Pendiente**: Definir tabla de comisiones (tabla DB nueva), modal para configurar rangos, y cálculo de ventas compartidas en el reporte.
+
+---
+
+> **Nota**: Estas features están en fase de idea. Se requiere reunión con el admin para definir alcance y prioridad antes de implementar.
 
 ## Cómo Correr (Desarrollo)
 ```bash
